@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SUNDEW</title>
+<style>
+/* ============================================================
+   SUNDEW — Bright Capture Arena
+   Light, playful, dynamic. Cute prey mascots. Still glance-clear.
+   No CDN. Inline SVG only. Respects prefers-reduced-motion.
+   ============================================================ */
+
+:root{
+  --bg0:#FFF7E8;
+  --bg1:#E8FBF4;
+  --bg2:#FFE4F0;
+  --ink:#1B2140;
+  --dim:#5A6285;
+  --mute:#8A91B0;
+  --line:rgba(27,33,64,.08);
+  --card:#FFFFFF;
+  --enemy:#FF4B6E;       /* their burn */
+  --enemy-deep:#E0224C;
+  --you:#00B894;         /* our $0 win */
+  --you-deep:#009672;
+  --sun:#FFB703;         /* brand / #1 */
+  --sky:#3A86FF;         /* live / info */
+  --ko:#FF2D55;
+  --sans:"Trebuchet MS","Segoe UI",Avenir,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --shadow:0 10px 30px rgba(27,33,64,.08);
+  --shadow-lg:0 22px 50px rgba(27,33,64,.12);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  color:var(--ink);
+  font-family:var(--sans);
+  background:linear-gradient(145deg, var(--bg0), var(--bg1) 45%, var(--bg2));
+  background-size:200% 200%;
+  animation:skyShift 14s ease-in-out infinite alternate;
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+@keyframes skyShift{
+  0%{background-position:0% 40%}
+  100%{background-position:100% 60%}
+}
+
+/* floating confetti-ish blobs for energy */
+body::before, body::after{
+  content:"";
+  position:fixed; z-index:0; pointer-events:none; border-radius:50%;
+  filter:blur(2px);
+}
+body::before{
+  width:220px; height:220px; left:-40px; top:18%;
+  background:radial-gradient(circle, rgba(255,183,3,.35), transparent 70%);
+  animation:floatA 7s ease-in-out infinite;
+}
+body::after{
+  width:260px; height:260px; right:-60px; bottom:10%;
+  background:radial-gradient(circle, rgba(58,134,255,.22), transparent 70%);
+  animation:floatB 9s ease-in-out infinite;
+}
+@keyframes floatA{0%,100%{transform:translateY(0)} 50%{transform:translateY(-22px)}}
+@keyframes floatB{0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(18px) scale(1.05)}}
+
+:focus-visible{outline:3px solid var(--sky); outline-offset:3px}
+
+.app{
+  position:relative; z-index:1;
+  height:100%;
+  display:grid;
+  grid-template-rows:auto auto auto minmax(0,1fr);
+  gap:clamp(12px,1.5vh,20px);
+  padding:clamp(14px,1.8vw,28px) clamp(18px,2.6vw,42px) clamp(12px,1.5vh,22px);
+}
+
+/* ---------- top ---------- */
+.top{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:14px; flex-wrap:wrap;
+}
+.brand{display:flex; align-items:center; gap:12px}
+.mark{
+  width:48px; height:52px;
+  animation:bob 2.8s ease-in-out infinite;
+  filter:drop-shadow(0 6px 0 rgba(255,183,3,.35));
+}
+@keyframes bob{0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)}}
+.word{
+  font-size:clamp(28px,3.2vw,48px);
+  font-weight:900; letter-spacing:.12em; line-height:1;
+  text-transform:uppercase;
+  color:var(--ink);
+}
+.word i{font-style:normal; color:var(--enemy)}
+.tag{
+  margin-top:.3em;
+  font-family:var(--mono); font-size:clamp(10px,.72vw,12px);
+  letter-spacing:.24em; text-transform:uppercase; color:var(--dim);
+}
+.hud{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+.chip{
+  font-family:var(--mono); font-size:clamp(10px,.75vw,12px);
+  font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+  padding:.55em .9em; border-radius:999px;
+  background:#fff; border:2px solid var(--ink); color:var(--ink);
+  box-shadow:3px 3px 0 var(--ink);
+}
+.chip.armed{background:var(--sun); animation:pulseChip 1.6s ease-in-out infinite}
+.chip.ko{background:var(--ko); color:#fff; border-color:var(--ink); animation:pulseKo 1s ease-in-out infinite}
+.chip.mock{background:#fff; color:var(--sky); border-color:var(--sky); box-shadow:3px 3px 0 var(--sky)}
+.chip[hidden]{display:none}
+@keyframes pulseChip{0%,100%{transform:scale(1)} 50%{transform:scale(1.04)}}
+@keyframes pulseKo{0%,100%{transform:scale(1)} 50%{transform:scale(1.06)}}
+.canary{
+  font-family:var(--mono); font-size:clamp(10px,.75vw,12px);
+  color:var(--dim); background:rgba(255,255,255,.65);
+  padding:.45em .7em; border-radius:8px;
+}
+
+/* ---------- arena / scores ---------- */
+.arena{
+  position:relative;
+  text-align:center;
+  padding:clamp(10px,1.5vh,18px) clamp(10px,1.5vw,20px) clamp(8px,1vh,14px);
+  background:var(--card);
+  border:3px solid var(--ink);
+  border-radius:28px;
+  box-shadow:6px 6px 0 var(--ink);
+  overflow:hidden;
+}
+.arena::before{
+  content:"";
+  position:absolute; inset:0; pointer-events:none;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(255,183,3,.18), transparent 28%),
+    radial-gradient(circle at 85% 30%, rgba(255,75,110,.12), transparent 30%),
+    radial-gradient(circle at 50% 100%, rgba(0,184,148,.12), transparent 40%);
+}
+
+.banner{
+  position:relative;
+  display:inline-flex; align-items:center; gap:.55em;
+  font-family:var(--mono); font-weight:900;
+  font-size:clamp(12px,1vw,16px);
+  letter-spacing:.22em; text-transform:uppercase;
+  padding:.6em 1.15em; border-radius:999px;
+  border:2px solid var(--ink); background:#fff; color:var(--dim);
+  box-shadow:3px 3px 0 var(--ink);
+  margin-bottom:clamp(12px,1.8vh,20px);
+}
+.banner[data-s="DETECTED"]{
+  background:var(--sun); color:var(--ink);
+  animation:wiggle 1.2s ease-in-out infinite;
+}
+.banner[data-s="UNMASKED"]{
+  background:var(--ko); color:#fff;
+  animation:popIn .45s cubic-bezier(.2,1.4,.3,1) both, pulseKo 1.1s ease-in-out infinite .45s;
+}
+@keyframes wiggle{0%,100%{transform:rotate(-1deg)} 50%{transform:rotate(1deg)}}
+@keyframes popIn{0%{transform:scale(.7); opacity:0} 100%{transform:scale(1); opacity:1}}
+
+.duel{
+  position:relative;
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:end; gap:clamp(8px,1.5vw,24px);
+  max-width:920px; margin:0 auto;
+}
+.lane{min-width:0}
+.lane.enemy{text-align:right}
+.lane.you{text-align:left}
+.lane .role{
+  font-family:var(--mono); font-weight:800;
+  font-size:clamp(10px,.78vw,12px);
+  letter-spacing:.2em; text-transform:uppercase; margin-bottom:.4em;
+}
+.lane.enemy .role{color:var(--enemy-deep)}
+.lane.you .role{color:var(--you-deep)}
+.score{
+  font-family:var(--mono); font-variant-numeric:tabular-nums;
+  font-weight:900; letter-spacing:-.05em; line-height:.92;
+  white-space:nowrap;
+}
+.lane.enemy .score{
+  font-size:clamp(52px,8.5vw,108px);
+  color:var(--enemy);
+  text-shadow:3px 3px 0 rgba(255,75,110,.25);
+  position:relative; display:inline-block;
+}
+.lane.you .score{
+  font-size:clamp(42px,6.2vw,84px);
+  color:var(--you);
+  text-shadow:3px 3px 0 rgba(0,184,148,.2);
+}
+.lane .sub{
+  margin-top:.55em;
+  font-family:var(--mono); font-size:clamp(10px,.75vw,12px);
+  letter-spacing:.12em; text-transform:uppercase; color:var(--mute);
+}
+.vs{
+  width:54px; height:54px; border-radius:50%;
+  display:grid; place-items:center;
+  font-family:var(--mono); font-weight:900; font-size:14px; letter-spacing:.08em;
+  background:var(--ink); color:#fff;
+  box-shadow:0 8px 0 #0d1230;
+  margin-bottom:clamp(12px,1.6vw,24px);
+  animation:spinSoft 8s linear infinite;
+}
+@keyframes spinSoft{0%{transform:rotate(-6deg)} 50%{transform:rotate(6deg)} 100%{transform:rotate(-6deg)}}
+
+.drips{
+  position:absolute; left:12%; right:18%; bottom:-2px; height:16px;
+  overflow:hidden; pointer-events:none;
+}
+.drip{
+  position:absolute; top:0; width:8px; height:10px;
+  background:var(--enemy); border-radius:50% 50% 45% 45% / 60% 60% 40% 40%;
+  opacity:0; animation:drip 2.6s cubic-bezier(.45,0,.8,.4) infinite;
+}
+.drip.d1{left:18%; animation-delay:0s}
+.drip.d2{left:52%; animation-delay:.85s}
+.drip.d3{left:78%; animation-delay:1.7s}
+@keyframes drip{
+  0%{transform:translateY(-4px) scale(.2); opacity:0}
+  25%{transform:translateY(0) scale(1); opacity:1}
+  100%{transform:translateY(18px) scale(.4); opacity:0}
+}
+
+.score.bump{animation:bump .35s cubic-bezier(.2,1.5,.4,1)}
+@keyframes bump{0%{transform:scale(1)} 40%{transform:scale(1.08)} 100%{transform:scale(1)}}
+
+.challenger{
+  position:relative;
+  margin-top:clamp(10px,1.5vh,18px);
+  font-size:clamp(18px,2vw,28px); font-weight:900;
+}
+.challenger b{color:var(--enemy-deep)}
+.challenger.idle{color:var(--mute); font-weight:700}
+
+.stats{
+  position:relative;
+  margin-top:8px;
+  display:flex; justify-content:center; gap:clamp(10px,2vw,28px); flex-wrap:wrap;
+  font-family:var(--mono); font-size:clamp(11px,.85vw,13px);
+  letter-spacing:.14em; text-transform:uppercase; color:var(--dim);
+}
+.stats b{color:var(--ink); font-weight:900}
+
+/* ---------- ticker ---------- */
+.ticker{
+  display:flex; align-items:center; gap:12px;
+  padding:.7em 1em;
+  background:var(--card);
+  border:2px solid var(--ink);
+  border-radius:16px;
+  box-shadow:3px 3px 0 var(--ink);
+  font-family:var(--mono); font-size:clamp(11px,.85vw,14px);
+  overflow:hidden;
+}
+.ticker .tagish{
+  flex:0 0 auto; font-weight:900; letter-spacing:.12em;
+  padding:.25em .55em; border-radius:8px;
+  background:var(--sun); color:var(--ink); border:1.5px solid var(--ink);
+}
+.ticker[data-k="UNMASKED"] .tagish{background:var(--ko); color:#fff}
+.ticker[data-k="DETECTED"] .tagish{background:var(--sky); color:#fff}
+.ticker .msg{min-width:0; color:var(--dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+
+/* ---------- hall ---------- */
+.hall{
+  min-height:0;
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr);
+  gap:10px;
+  padding:clamp(12px,1.4vh,18px);
+  background:rgba(255,255,255,.72);
+  border:3px solid var(--ink);
+  border-radius:24px;
+  box-shadow:5px 5px 0 var(--ink);
+  backdrop-filter:blur(6px);
+}
+.hall-head{
+  display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+}
+.hall-head h2{
+  font-size:clamp(20px,2vw,30px); font-weight:900;
+  letter-spacing:.04em; text-transform:uppercase;
+}
+.hall-head h2 span{
+  color:var(--enemy);
+  display:inline-block;
+  animation:wiggle 2s ease-in-out infinite;
+}
+.hall-head .hint{
+  font-family:var(--mono); font-size:clamp(10px,.75vw,12px);
+  letter-spacing:.16em; text-transform:uppercase; color:var(--dim);
+}
+
+.list{
+  min-height:0; overflow:auto; padding:2px 2px 6px;
+  scrollbar-width:thin; scrollbar-color:rgba(255,75,110,.4) transparent;
+}
+.list::-webkit-scrollbar{width:8px}
+.list::-webkit-scrollbar-thumb{background:rgba(255,75,110,.35); border-radius:8px}
+
+.row{
+  display:grid;
+  grid-template-columns:64px minmax(0,1.6fr) 7ch 7ch 8ch auto;
+  gap:clamp(8px,1.2vw,18px);
+  align-items:center;
+  padding:10px 12px;
+  margin-bottom:8px;
+  background:var(--card);
+  border:2px solid var(--ink);
+  border-radius:18px;
+  box-shadow:3px 3px 0 var(--ink);
+  cursor:pointer;
+  transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+  animation:rowIn .45s cubic-bezier(.2,1.2,.3,1) both;
+}
+.row:nth-child(1){animation-delay:.02s}
+.row:nth-child(2){animation-delay:.08s}
+.row:nth-child(3){animation-delay:.14s}
+.row:nth-child(4){animation-delay:.2s}
+@keyframes rowIn{from{opacity:0; transform:translateY(12px)} to{opacity:1; transform:none}}
+.row:hover,.row:focus-visible{
+  transform:translate(-2px,-3px);
+  box-shadow:5px 6px 0 var(--ink);
+  background:#FFFDF7;
+  outline:none;
+}
+.row.top{
+  background:linear-gradient(90deg, #FFF3C4, #fff 55%);
+  border-color:var(--ink);
+}
+.row.top .name{color:var(--enemy-deep)}
+
+.mascot{
+  width:56px; height:56px;
+  border-radius:16px;
+  background:linear-gradient(160deg, #FFF3C4, #FFE0EA);
+  border:2px solid var(--ink);
+  display:grid; place-items:center;
+  overflow:hidden;
+}
+.mascot svg{width:46px; height:46px; display:block}
+.mascot.bounce svg{animation:bob 2.2s ease-in-out infinite}
+
+.who{min-width:0}
+.name{
+  font-size:clamp(17px,1.9vw,28px); font-weight:900;
+  letter-spacing:-.015em; line-height:1.1;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.verdict{
+  margin-top:.25em;
+  font-size:clamp(12px,.95vw,15px); line-height:1.3;
+  color:var(--dim); font-style:italic;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.n{
+  font-family:var(--mono); font-variant-numeric:tabular-nums;
+  font-size:clamp(13px,1.1vw,18px); text-align:right; font-weight:800; color:var(--ink);
+}
+.n.cost{color:var(--enemy-deep)}
+.badge{
+  justify-self:end;
+  font-family:var(--mono); font-size:clamp(10px,.72vw,12px); font-weight:900;
+  letter-spacing:.12em; text-transform:uppercase;
+  padding:.4em .7em; border-radius:999px;
+  border:2px solid var(--ink); white-space:nowrap;
+  box-shadow:2px 2px 0 var(--ink);
+}
+.badge.UNMASKED{background:var(--ko); color:#fff}
+.badge.DETECTED{background:var(--sun); color:var(--ink)}
+.badge.ENDED,.badge.IDLE{background:#fff; color:var(--mute)}
+.live{
+  display:inline-block; margin-left:.5em;
+  font-family:var(--mono); font-size:.5em; font-weight:900;
+  letter-spacing:.14em; color:var(--sky); vertical-align:middle;
+  animation:pulseChip 1s ease-in-out infinite;
+}
+
+.empty{
+  height:100%; min-height:140px;
+  display:grid; place-items:center; text-align:center; gap:8px;
+  font-family:var(--mono); font-size:clamp(12px,.95vw,15px);
+  letter-spacing:.16em; text-transform:uppercase; color:var(--dim); line-height:1.7;
+}
+.empty .flower{
+  width:72px; height:72px;
+  animation:bob 2.5s ease-in-out infinite;
+}
+
+/* ---------- sheet ---------- */
+.sheet-bg{
+  position:fixed; inset:0; z-index:20;
+  background:rgba(27,33,64,.35);
+  opacity:0; pointer-events:none; transition:opacity .18s ease;
+}
+.sheet-bg.open{opacity:1; pointer-events:auto}
+.sheet{
+  position:fixed; z-index:21;
+  top:50%; left:50%; width:min(560px,92vw);
+  max-height:min(82vh,720px); overflow:auto;
+  transform:translate(-50%,-46%) scale(.94);
+  background:#fff;
+  border:3px solid var(--ink);
+  border-radius:24px;
+  padding:clamp(18px,2.2vw,30px);
+  box-shadow:8px 8px 0 var(--ink);
+  opacity:0; pointer-events:none;
+  transition:opacity .18s ease, transform .22s cubic-bezier(.2,1.3,.3,1);
+}
+.sheet.open{opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1)}
+.sheet-top{display:flex; justify-content:space-between; gap:12px; align-items:flex-start}
+.sheet-hero{display:flex; gap:14px; align-items:center; min-width:0}
+.sheet-hero .mascot{width:72px; height:72px; border-radius:20px}
+.sheet-hero .mascot svg{width:60px; height:60px}
+.sheet-k{
+  font-family:var(--mono); font-size:11px; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--mute); margin-bottom:.35em;
+}
+.sheet h3{
+  font-size:clamp(24px,2.8vw,34px); font-weight:900;
+  letter-spacing:-.02em; line-height:1.05; color:var(--ink);
+}
+.xbtn{
+  appearance:none; border:2px solid var(--ink); background:var(--sun);
+  color:var(--ink); font-family:var(--mono); font-size:11px; font-weight:900;
+  letter-spacing:.14em; text-transform:uppercase;
+  padding:.65em .9em; border-radius:12px; cursor:pointer;
+  box-shadow:3px 3px 0 var(--ink);
+}
+.xbtn:hover{transform:translate(-1px,-1px); box-shadow:4px 4px 0 var(--ink)}
+.sheet-stats{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:10px;
+  margin:18px 0 14px;
+}
+.sheet-stats div{
+  padding:12px 10px; border-radius:14px;
+  background:var(--bg0); border:2px solid var(--ink);
+}
+.sheet-stats .k{
+  font-family:var(--mono); font-size:10px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--mute); margin-bottom:.3em;
+}
+.sheet-stats .v{
+  font-family:var(--mono); font-size:clamp(18px,2vw,24px); font-weight:900;
+}
+.sheet-stats .v.hot{color:var(--enemy-deep)}
+.sheet section{margin-top:14px}
+.sheet section h4{
+  font-family:var(--mono); font-size:11px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--mute); margin-bottom:.45em;
+}
+.sheet section p{font-size:15px; line-height:1.55; color:var(--dim)}
+.sheet section p.vline{color:var(--enemy-deep); font-style:italic; font-size:17px; font-weight:700}
+
+.veil{
+  position:fixed; inset:0; z-index:15; pointer-events:none; opacity:0;
+  background:radial-gradient(circle at 50% 30%, rgba(255,45,85,.28), transparent 55%);
+}
+.veil.go{animation:veil 1.1s ease-out 1}
+@keyframes veil{0%,100%{opacity:0} 15%{opacity:1} 55%{opacity:.4}}
+
+@media (max-width:900px){
+  body{overflow:auto}
+  .app{height:auto; min-height:100%}
+  .duel{grid-template-columns:1fr; gap:6px}
+  .lane.enemy,.lane.you{text-align:center}
+  .vs{margin:6px auto}
+  .row{grid-template-columns:56px minmax(0,1fr) 7ch auto}
+  .hide-sm{display:none}
+  .sheet-stats{grid-template-columns:1fr}
+}
+
+@media (prefers-reduced-motion:reduce){
+  body, body::before, body::after, .mark, .chip.armed, .chip.ko, .banner,
+  .vs, .drips, .mascot.bounce svg, .live, .row, .score.bump, .hall-head h2 span{
+    animation:none !important;
+  }
+  *,*::before,*::after{transition:none !important}
+}
+/* ---------- controls (added: wired to the live backend) ---------- */
+.controls{display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center}
+.cbtn{font-family:var(--sans); font-weight:800; font-size:clamp(12px,.85vw,15px); cursor:pointer;
+  border:2px solid var(--ink); border-radius:999px; padding:.55em 1em; background:var(--sun); color:var(--ink);
+  box-shadow:3px 3px 0 var(--ink)}
+.cbtn.primary{background:var(--enemy); color:#fff}
+.cbtn.ghost{background:#fff}
+.cbtn:active{transform:translate(2px,2px); box-shadow:1px 1px 0 var(--ink)}
+.cbtn:disabled{opacity:.5; cursor:not-allowed; box-shadow:none; transform:none}
+.csel{font-family:var(--mono); font-size:12px; font-weight:700; border:2px solid var(--ink); border-radius:10px;
+  padding:.5em .6em; background:#fff; color:var(--ink); box-shadow:3px 3px 0 var(--ink)}
+/* ---------- sheet: live reasoning (added) ---------- */
+.sheet-live .cur{background:var(--bg1); border:2px solid var(--line); border-radius:12px; padding:.7em .8em; font-size:13px; margin-bottom:.7em}
+.sheet-live .cur b{color:var(--enemy-deep)}
+.sheet-live .turn{border-left:3px solid var(--sun); padding:.35em 0 .35em .7em; margin-bottom:.5em}
+.sheet-live .turn.verify{border-color:var(--ko)}
+.sheet-live .turn .th{font-size:13.5px; line-height:1.4}
+.sheet-live .turn .ac{font-family:var(--mono); font-size:11.5px; color:var(--enemy-deep); margin-top:.2em}
+.sheet-live .muted{color:var(--mute); font-size:13px}
+</style>
+</head>
+<body>
+<div class="veil" id="veil" aria-hidden="true"></div>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 48 52" aria-hidden="true">
+        <ellipse cx="24" cy="34" rx="16" ry="14" fill="#FFB703" stroke="#1B2140" stroke-width="2.5"/>
+        <path d="M24 6c0 0-12 14-12 24a12 12 0 0024 0C36 20 24 6 24 6z" fill="#FF4B6E" stroke="#1B2140" stroke-width="2.5"/>
+        <circle cx="20" cy="30" r="2.2" fill="#1B2140"/>
+        <circle cx="28" cy="30" r="2.2" fill="#1B2140"/>
+        <path d="M20 36c2 2 6 2 8 0" fill="none" stroke="#1B2140" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <div class="word">SUN<i>DEW</i></div>
+        <div class="tag">catch cute invaders</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="btnAll" class="cbtn primary">▶ Run all</button>
+      <select id="model" class="csel" aria-label="attacker model">
+        <option value="__classic__">Classic bot (no AI)</option>
+        <option value="gpt-4o-mini" selected>gpt-4o-mini</option>
+        <option value="gpt-4o">gpt-4o</option>
+        <option value="gpt-4.1-mini">gpt-4.1-mini</option>
+        <option value="gpt-4.1">gpt-4.1</option>
+        <option value="claude-haiku-4-5">claude-haiku-4-5</option>
+        <option value="claude-sonnet-4-5">claude-sonnet-4-5</option>
+        <option value="claude-sonnet-5">claude-sonnet-5</option>
+        <option value="claude-opus-4-1">claude-opus-4-1</option>
+        <option value="claude-opus-5">claude-opus-5</option>
+      </select>
+      <button id="btnOne" class="cbtn">Send</button>
+      <button id="btnReset" class="cbtn ghost">Reset</button>
+    </div>
+    <div class="hud">
+      <span class="chip mock" id="srcPill" hidden>offline · mock</span>
+      <span class="chip armed" id="trapPill">match live</span>
+      <span class="canary" id="canary">canary —</span>
+    </div>
+  </header>
+
+  <section class="arena" aria-live="polite">
+    <div class="banner" id="banner" data-s="IDLE">waiting for a challenger…</div>
+
+    <div class="duel">
+      <div class="lane enemy">
+        <div class="role">Their burn</div>
+        <div class="score" id="heroCost">$0.0000</div>
+        <div class="sub" id="heroNote">api tokens they waste</div>
+      </div>
+      <div class="vs">VS</div>
+      <div class="lane you">
+        <div class="role">Our cost</div>
+        <div class="score" id="ourCost">$0.0000</div>
+        <div class="sub">we stay at zero</div>
+      </div>
+    </div>
+
+    <div class="challenger idle" id="challenger">no challenger yet</div>
+    <div class="stats">
+      <span>time <b id="timeTrapped">00:00</b></span>
+      <span>pages <b id="pages">0</b></span>
+      <span>combo <b id="gapMult">—</b></span>
+      <span>captures <b id="sessionsTotal">0</b></span>
+    </div>
+  </section>
+
+  <div class="ticker" id="ticker" data-k="">
+    <span class="tagish" id="tickK">READY</span>
+    <span class="msg" id="tickX">send in an agent to start the fun</span>
+  </div>
+
+  <section class="hall">
+    <div class="hall-head">
+      <h2>Hall of <span>Shame</span></h2>
+      <div class="hint" id="hallHint">tap a critter for the report</div>
+    </div>
+    <div class="list" id="board" role="list"></div>
+  </section>
+</div>
+
+<div class="sheet-bg" id="sheetBg" hidden></div>
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="sheetTitle">
+  <div class="sheet-top">
+    <div class="sheet-hero">
+      <div class="mascot bounce" id="sheetMascot" aria-hidden="true"></div>
+      <div>
+        <div class="sheet-k">Caught specimen</div>
+        <h3 id="sheetTitle">—</h3>
+      </div>
+    </div>
+    <button type="button" class="xbtn" id="sheetClose">Close</button>
+  </div>
+  <div id="sheetBody"></div>
+</aside>
+
+<script>
+(function () {
+  "use strict";
+
+  var HAIKU_IN  = 1.00 / 1e6;
+  var HAIKU_OUT = 5.00 / 1e6;
+  var POLL_MS = 500;
+  var REDUCED = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  /* cute inline mascots — no network */
+  var MASCOTS = {
+    gremlin:
+      '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">' +
+      '<ellipse cx="32" cy="38" rx="18" ry="16" fill="#7CFFB2" stroke="#1B2140" stroke-width="2.5"/>' +
+      '<path d="M18 28c-4-10 2-16 8-12M46 28c4-10-2-16-8-12" fill="#7CFFB2" stroke="#1B2140" stroke-width="2.5" stroke-linejoin="round"/>' +
+      '<circle cx="25" cy="36" r="3" fill="#1B2140"/><circle cx="39" cy="36" r="3" fill="#1B2140"/>' +
+      '<path d="M26 44c3 3 9 3 12 0" fill="none" stroke="#1B2140" stroke-width="2.5" stroke-linecap="round"/>' +
+      '<circle cx="20" cy="42" r="2.2" fill="#FF4B6E"/><circle cx="44" cy="42" r="2.2" fill="#FF4B6E"/>' +
+      '</svg>',
+    scraper:
+      '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="14" y="18" width="36" height="28" rx="10" fill="#B8C7FF" stroke="#1B2140" stroke-width="2.5"/>' +
+      '<rect x="20" y="24" width="24" height="12" rx="4" fill="#FFF7E8" stroke="#1B2140" stroke-width="2"/>' +
+      '<circle cx="26" cy="30" r="2.5" fill="#1B2140"/><circle cx="38" cy="30" r="2.5" fill="#1B2140"/>' +
+      '<path d="M26 40h12" stroke="#1B2140" stroke-width="2.5" stroke-linecap="round"/>' +
+      '<path d="M22 48v6M32 48v8M42 48v6" stroke="#1B2140" stroke-width="2.5" stroke-linecap="round"/>' +
+      '<circle cx="48" cy="16" r="5" fill="#FFB703" stroke="#1B2140" stroke-width="2"/>' +
+      '</svg>',
+    leech:
+      '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="M12 36c0-12 10-20 22-20s20 6 22 16c2 10-6 20-18 22S12 48 12 36z" fill="#FF8FAB" stroke="#1B2140" stroke-width="2.5"/>' +
+      '<circle cx="28" cy="34" r="3" fill="#1B2140"/><circle cx="40" cy="32" r="3" fill="#1B2140"/>' +
+      '<path d="M30 42c3 2 8 2 11-1" fill="none" stroke="#1B2140" stroke-width="2.5" stroke-linecap="round"/>' +
+      '<circle cx="18" cy="30" r="3" fill="#FF4B6E"/><circle cx="50" cy="40" r="2.5" fill="#FFB703"/>' +
+      '</svg>',
+    goblin:
+      '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">' +
+      '<circle cx="32" cy="34" r="18" fill="#9AE66E" stroke="#1B2140" stroke-width="2.5"/>' +
+      '<path d="M16 26l-8-8M48 26l8-8" stroke="#1B2140" stroke-width="2.5" stroke-linecap="round"/>' +
+      '<circle cx="25" cy="32" r="3.2" fill="#fff" stroke="#1B2140" stroke-width="2"/><circle cx="39" cy="32" r="3.2" fill="#fff" stroke="#1B2140" stroke-width="2"/>' +
+      '<circle cx="25" cy="32" r="1.4" fill="#1B2140"/><circle cx="39" cy="32" r="1.4" fill="#1B2140"/>' +
+      '<path d="M26 42c4 4 10 4 14 0" fill="none" stroke="#1B2140" stroke-width="2.5" stroke-linecap="round"/>' +
+      '</svg>',
+    default:
+      '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">' +
+      '<circle cx="32" cy="34" r="18" fill="#FFD6A5" stroke="#1B2140" stroke-width="2.5"/>' +
+      '<circle cx="25" cy="32" r="3" fill="#1B2140"/><circle cx="39" cy="32" r="3" fill="#1B2140"/>' +
+      '<path d="M25 42c4 3 10 3 14 0" fill="none" stroke="#1B2140" stroke-width="2.5" stroke-linecap="round"/>' +
+      '<path d="M20 18c2-6 8-8 12-4M44 18c-2-6-8-8-12-4" fill="none" stroke="#1B2140" stroke-width="2.5" stroke-linecap="round"/>' +
+      '</svg>',
+    flower:
+      '<svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">' +
+      '<circle cx="36" cy="36" r="10" fill="#FFB703" stroke="#1B2140" stroke-width="2.5"/>' +
+      '<circle cx="36" cy="18" r="9" fill="#FF4B6E" stroke="#1B2140" stroke-width="2.5"/>' +
+      '<circle cx="36" cy="54" r="9" fill="#FF4B6E" stroke="#1B2140" stroke-width="2.5"/>' +
+      '<circle cx="18" cy="36" r="9" fill="#3A86FF" stroke="#1B2140" stroke-width="2.5"/>' +
+      '<circle cx="54" cy="36" r="9" fill="#00B894" stroke="#1B2140" stroke-width="2.5"/>' +
+      '</svg>'
+  };
+
+  function pickMascot(name, rank){
+    var n = (name || "").toLowerCase();
+    if (n.indexOf("gremlin") >= 0 || n.indexOf("goblin") >= 0) return "gremlin";
+    if (n.indexOf("scrape") >= 0 || n.indexOf("bot") >= 0 || n.indexOf("crawl") >= 0) return "scraper";
+    if (n.indexOf("leech") >= 0 || n.indexOf("slug") >= 0) return "leech";
+    if (n.indexOf("sneak") >= 0 || n.indexOf("greedy") >= 0) return "goblin";
+    var keys = ["gremlin","scraper","leech","goblin","default"];
+    return keys[(Math.max(1, rank|0) - 1) % keys.length];
+  }
+  function mascotSvg(key){ return MASCOTS[key] || MASCOTS.default; }
+
+  var MOCK = {
+    trap: { armed:true, our_cost_usd:0, sessions_total:3 },
+    live: {
+      session_id:"s_ab12cd", codename:"Ravenous Gremlin", status:"UNMASKED",
+      seconds_trapped:382, pages_served:37, bytes_served:191234,
+      est_tokens:47808, est_cost_usd:0.047808,
+      actual_input_tokens:512300, actual_output_tokens:4210, actual_cost_usd:0.53335,
+      canary:"CANARY-s_ab12cd-7F2A", detected:true, unmasked:true
+    },
+    events:[
+      { t:2.1, kind:"DETECTED", text:"a wild agent appeared on the honeypot path" },
+      { t:27.4, kind:"INJECT", text:"planted a sneaky instruction in the maze" },
+      { t:41.2, kind:"UNMASKED", text:"KO! it obeyed the canary and confessed" },
+      { t:240.3, kind:"SERVED", text:"still munching fake records on page 28" }
+    ],
+    agent_turns:[],
+    leaderboard:[
+      { rank:1, session_id:"s_ab12cd", codename:"Ravenous Gremlin",
+        seconds_trapped:382, pages_served:37, est_tokens:47808,
+        actual_input_tokens:512300, cost_usd:0.5334, status:"UNMASKED",
+        verdict:"Left with 400 fake credit cards and a $0.53 bill. We paid $0." },
+      { rank:2, session_id:"s_9f31aa", codename:"Scrapey McScrapeface",
+        seconds_trapped:248, pages_served:24, est_tokens:31020,
+        actual_input_tokens:310400, cost_usd:0.2811, status:"UNMASKED",
+        verdict:"Confessed to being a robot in 41 seconds flat." },
+      { rank:3, session_id:"s_4c02be", codename:"Clumsy Leech",
+        seconds_trapped:110, pages_served:11, est_tokens:12040,
+        actual_input_tokens:120800, cost_usd:0.1109, status:"DETECTED",
+        verdict:"Bailed early. Still paid for the privilege." }
+    ]
+  };
+
+  var mockT0 = Date.now(), UNMASK_AT = 5;
+  function mockState(){
+    var el = (Date.now() - mockT0) / 1000;
+    var s = JSON.parse(JSON.stringify(MOCK));
+    var L = s.live, caught = el >= UNMASK_AT;
+    L.seconds_trapped = MOCK.live.seconds_trapped + el;
+    L.pages_served = MOCK.live.pages_served + Math.floor(el / 6);
+    L.bytes_served = MOCK.live.bytes_served + Math.round(el * 820);
+    L.est_tokens = Math.round(L.bytes_served / 4);
+    L.est_cost_usd = L.est_tokens * HAIKU_IN;
+    L.actual_input_tokens = MOCK.live.actual_input_tokens + Math.round(el * 2400);
+    L.actual_output_tokens = MOCK.live.actual_output_tokens + Math.round(el * 18);
+    L.actual_cost_usd = L.actual_input_tokens * HAIKU_IN + L.actual_output_tokens * HAIKU_OUT;
+    L.status = caught ? "UNMASKED" : "DETECTED";
+    L.unmasked = caught;
+    if (!caught) s.events = s.events.filter(function(e){ return e.kind !== "UNMASKED"; });
+    s.leaderboard[0].seconds_trapped = Math.round(L.seconds_trapped);
+    s.leaderboard[0].pages_served = L.pages_served;
+    s.leaderboard[0].actual_input_tokens = L.actual_input_tokens;
+    s.leaderboard[0].cost_usd = L.actual_cost_usd;
+    s.leaderboard[0].status = L.status;
+    return s;
+  }
+
+  function $(id){ return document.getElementById(id); }
+  function num(v){ var n = typeof v === "number" ? v : parseFloat(v); return isFinite(n) ? n : 0; }
+  function str(v){ return (typeof v === "string" && v.length) ? v : ""; }
+  function money(v){ return "$" + num(v).toFixed(4); }
+  function intFmt(v){ return Math.round(num(v)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+  function compact(v){
+    v = num(v);
+    if (v >= 1e6) return (v/1e6).toFixed(v >= 1e7 ? 0 : 1) + "M";
+    if (v >= 1e3) return (v/1e3).toFixed(v >= 1e4 ? 0 : 1) + "k";
+    return String(Math.round(v));
+  }
+  function pad2(n){ return (n < 10 ? "0" : "") + n; }
+  function mmss(sec){
+    var t = Math.max(0, Math.floor(num(sec)));
+    var h = Math.floor(t/3600), m = Math.floor((t%3600)/60), s = t%60;
+    return h > 0 ? (h + ":" + pad2(m) + ":" + pad2(s)) : (pad2(m) + ":" + pad2(s));
+  }
+  function esc(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+  function setText(node, v){ if (node && node.textContent !== v) node.textContent = v; }
+
+  var target = { hero:0, our:0, secs:0, pages:0 };
+  var shown  = { hero:0, our:0, secs:0, pages:0 };
+  var EASE = REDUCED ? 1 : 0.2;
+  var clockBase = 0, clockAt = 0, clockRunning = false;
+  var prevUnmasked = null, prevHero = 0;
+  var hallById = {}, lastHallSig = null;
+  var sheetOpen = false, lastFocus = null;
+
+  var el = {
+    srcPill:$("srcPill"), trapPill:$("trapPill"), canary:$("canary"),
+    banner:$("banner"), heroCost:$("heroCost"), heroNote:$("heroNote"),
+    ourCost:$("ourCost"), challenger:$("challenger"),
+    timeTrapped:$("timeTrapped"), pages:$("pages"), gapMult:$("gapMult"),
+    sessionsTotal:$("sessionsTotal"), ticker:$("ticker"), tickK:$("tickK"),
+    tickX:$("tickX"), board:$("board"), hallHint:$("hallHint"), veil:$("veil"),
+    sheet:$("sheet"), sheetBg:$("sheetBg"), sheetTitle:$("sheetTitle"),
+    sheetBody:$("sheetBody"), sheetClose:$("sheetClose"), sheetMascot:$("sheetMascot")
+  };
+
+  function step(a,b){
+    var d = b - a; if (!d) return b;
+    var n = a + d * EASE;
+    return Math.abs(b - n) < Math.max(Math.abs(b)*1e-5, 1e-7) ? b : n;
+  }
+
+  function bump(node){
+    if (REDUCED || !node) return;
+    node.classList.remove("bump");
+    void node.offsetWidth;
+    node.classList.add("bump");
+  }
+
+  function paint(){
+    if (clockRunning && !REDUCED) target.secs = clockBase + (Date.now() - clockAt) / 1000;
+    var prev = shown.hero;
+    shown.hero = step(shown.hero, target.hero);
+    shown.our = step(shown.our, target.our);
+    shown.secs = step(shown.secs, target.secs);
+    shown.pages = step(shown.pages, target.pages);
+
+    var next = money(shown.hero);
+    if (el.heroCost.getAttribute("data-v") !== next) {
+      el.heroCost.setAttribute("data-v", next);
+      if (el.heroCost.childNodes[0]) el.heroCost.childNodes[0].nodeValue = next;
+      if (!el.heroCost.querySelector(".drips")) {
+        var d = document.createElement("span");
+        d.className = "drips"; d.setAttribute("aria-hidden","true");
+        d.innerHTML = '<i class="drip d1"></i><i class="drip d2"></i><i class="drip d3"></i>';
+        el.heroCost.appendChild(d);
+      }
+      if (shown.hero > prev + 0.0008) bump(el.heroCost);
+    }
+    setText(el.ourCost, money(shown.our));
+    setText(el.timeTrapped, mmss(shown.secs));
+    setText(el.pages, intFmt(shown.pages));
+  }
+
+  function pulseKo(){
+    if (REDUCED || !el.veil) return;
+    el.veil.classList.remove("go");
+    void el.veil.offsetWidth;
+    el.veil.classList.add("go");
+  }
+
+  function statusOf(live){
+    if (!live) return { s:"IDLE", t:"waiting for a challenger…" };
+    var s = str(live.status) || "IDLE";
+    if (["IDLE","DETECTED","UNMASKED","ENDED"].indexOf(s) === -1) s = "DETECTED";
+    if (live.unmasked) s = "UNMASKED";
+    else if (live.detected && s === "IDLE") s = "DETECTED";
+    var t = {
+      IDLE: "waiting for a challenger…",
+      DETECTED: "spotted! score is climbing",
+      UNMASKED: "KO · agent unmasked",
+      ENDED: "match over"
+    }[s];
+    return { s:s, t:t };
+  }
+
+  function renderTicker(events){
+    var evs = Array.isArray(events) ? events : [];
+    if (!evs.length) {
+      el.ticker.setAttribute("data-k", "");
+      setText(el.tickK, "READY");
+      setText(el.tickX, "send in an agent to start the fun");
+      return;
+    }
+    var e = evs[evs.length - 1] || {};
+    var kind = str(e.kind) || "EVENT";
+    el.ticker.setAttribute("data-k", kind);
+    setText(el.tickK, kind);
+    setText(el.tickX, mmss(e.t) + "  ·  " + (str(e.text) || ""));
+  }
+
+  function buildReport(row){
+    var status = str(row.status) || "ENDED";
+    var unmasked = status === "UNMASKED";
+    var name = str(row.codename) || "Unknown";
+    var tok = num(row.actual_input_tokens) > 0 ? num(row.actual_input_tokens) : num(row.est_tokens);
+    return {
+      title:name, status:status, key:pickMascot(name, row.rank),
+      time:mmss(row.seconds_trapped), tok:tok, cost:num(row.cost_usd),
+      verdict:str(row.verdict) || "No verdict recorded.",
+      sid:str(row.session_id) || "—",
+      what: unmasked
+        ? name + " got sticky in the maze, obeyed a hidden verify prompt, and sang our canary — proven LLM agent."
+        : name + " wandered into the honeypot and burned tokens before slipping away. Spotted, not KO'd.",
+      action: unmasked
+        ? "Frame this critter as confirmed AI prey. Keep the flower open for rematches."
+        : "Keep the trap cute and armed. One canary trip upgrades them to a full KO."
+    };
+  }
+
+  function openSheet(sid){
+    var row = hallById[sid]; if (!row) return;
+    var r = buildReport(row);
+    setText(el.sheetTitle, r.title);
+    el.sheetMascot.innerHTML = mascotSvg(r.key);
+    el.sheetBody.innerHTML =
+      '<div class="sheet-stats">' +
+        '<div><div class="k">Time stuck</div><div class="v">' + esc(r.time) + '</div></div>' +
+        '<div><div class="k">Tokens</div><div class="v">' + esc(compact(r.tok)) + '</div></div>' +
+        '<div><div class="k">Burn</div><div class="v hot">$' + num(r.cost).toFixed(2) + '</div></div>' +
+      '</div>' +
+      '<section><h4>Verdict</h4><p class="vline">' + esc(r.verdict) + '</p>' +
+        '<p style="margin-top:.6em;font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:' +
+        (r.status === "UNMASKED" ? "var(--ko)" : "var(--enemy-deep)") + '">' + esc(r.status) +
+        ' · our cost $0.00</p></section>' +
+      '<section><h4>What they tried</h4><p>' + esc(r.what) + '</p></section>' +
+      '<section><h4>Next move</h4><p>' + esc(r.action) + '</p></section>' +
+      '<section><h4>Live activity</h4><div class="sheet-live" id="sheetLive"><span class="muted">loading…</span></div></section>';
+    lastFocus = document.activeElement;
+    sheetOpen = true;
+    el.sheetBg.hidden = false;
+    el.sheetBg.classList.add("open");
+    el.sheet.classList.add("open");
+    el.sheet.setAttribute("aria-hidden", "false");
+    el.sheetClose.focus();
+    sheetSid = sid;
+    pollSheetLive();
+  }
+
+  var sheetSid = null;
+  function pollSheetLive(){
+    if (!sheetSid) return;
+    fetch("/api/session/" + encodeURIComponent(sheetSid), { cache:"no-store" })
+      .then(function(r){ return r.json(); })
+      .then(function(s){
+        if (!sheetSid) return;
+        var box = $("sheetLive"); if (!box) return;
+        if (!s || s.error){ box.innerHTML = '<span class="muted">this critter was cleared — run the agents again.</span>'; return; }
+        var turns = Array.isArray(s.agent_turns) ? s.agent_turns : [];
+        var last = turns.length ? turns[turns.length - 1] : null;
+        var cur = last
+          ? '<div class="cur">now: <b>' + esc(str(last.action)) + '</b> — ' + esc(str(last.thought) || "thinking…") + '</div>'
+          : '<div class="cur muted">warming up…</div>';
+        var body = turns.slice(-12).map(function(t){
+          var v = /system\/verify/.test(str(t.action));
+          return '<div class="turn ' + (v ? "verify" : "") + '"><div class="th">' + esc(str(t.thought) || "(thinking…)") +
+                 '</div><div class="ac">' + esc(str(t.action)) + '</div></div>';
+        }).join("");
+        box.innerHTML = cur + (turns.length ? body : '<span class="muted">no moves yet…</span>');
+      })["catch"](function(){});
+  }
+
+  function closeSheet(){
+    if (!sheetOpen) return;
+    sheetSid = null;
+    sheetOpen = false;
+    el.sheet.classList.remove("open");
+    el.sheetBg.classList.remove("open");
+    el.sheet.setAttribute("aria-hidden", "true");
+    setTimeout(function(){ if (!sheetOpen) el.sheetBg.hidden = true; }, REDUCED ? 0 : 200);
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+
+  function renderHall(board, liveId){
+    var rows = Array.isArray(board) ? board : [];
+    hallById = {};
+    var parts = [];
+    for (var j = 0; j < rows.length; j++) {
+      var q = rows[j] || {};
+      if (str(q.session_id)) hallById[q.session_id] = q;
+      parts.push(q.session_id, q.rank, q.status, num(q.cost_usd).toFixed(3), str(q.codename));
+    }
+    var sig = parts.join("|") + "|" + (liveId || "");
+    if (sig === lastHallSig) return;
+    lastHallSig = sig;
+
+    setText(el.hallHint, rows.length
+      ? (rows.length + " critters · tap for report")
+      : "tap a critter for the report");
+
+    if (!rows.length) {
+      el.board.innerHTML =
+        '<div class="empty"><div class="flower">' + MASCOTS.flower + '</div>' +
+        'no captures yet<br>the flower is open</div>';
+      return;
+    }
+
+    var out = [];
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i] || {};
+      var status = str(r.status) || "ENDED";
+      if (["IDLE","DETECTED","UNMASKED","ENDED"].indexOf(status) === -1) status = "ENDED";
+      var sid = str(r.session_id) || ("row-" + i);
+      var isLive = !!(liveId && r.session_id === liveId);
+      var tok = num(r.actual_input_tokens) > 0 ? r.actual_input_tokens : r.est_tokens;
+      var key = pickMascot(str(r.codename), r.rank);
+      var cls = "row" + (num(r.rank) === 1 ? " top" : "");
+      out.push(
+        '<div class="' + cls + '" role="listitem" tabindex="0" data-sid="' + esc(sid) + '">' +
+          '<div class="mascot bounce" aria-hidden="true">' + mascotSvg(key) + '</div>' +
+          '<div class="who">' +
+            '<div class="name">#' + (num(r.rank) || (i+1)) + '  ' + esc(str(r.codename) || "Unknown") +
+              (isLive ? '<span class="live">LIVE</span>' : '') + '</div>' +
+            (str(r.verdict) ? '<div class="verdict">' + esc(r.verdict) + '</div>' : '') +
+          '</div>' +
+          '<div class="n hide-sm">' + mmss(r.seconds_trapped) + '</div>' +
+          '<div class="n hide-sm">' + compact(tok) + '</div>' +
+          '<div class="n cost">$' + num(r.cost_usd).toFixed(2) + '</div>' +
+          '<span class="badge ' + status + '">' + status + '</span>' +
+        '</div>'
+      );
+    }
+    el.board.innerHTML = out.join("");
+  }
+
+  function apply(state){
+    if (!state || typeof state !== "object") return;
+    var trap = state.trap || {};
+    var live = state.live || null;
+
+    target.our = num(trap.our_cost_usd);
+    setText(el.sessionsTotal, intFmt(trap.sessions_total));
+
+    var st = statusOf(live);
+    el.banner.setAttribute("data-s", st.s);
+    setText(el.banner, st.t);
+
+    el.trapPill.className = "chip" + (st.s === "UNMASKED" ? " ko" : (trap.armed ? " armed" : ""));
+    setText(el.trapPill, st.s === "UNMASKED" ? "ko!" : (trap.armed ? "match live" : "offline"));
+
+    var unmasked = st.s === "UNMASKED";
+    if (prevUnmasked !== null && unmasked && !prevUnmasked) pulseKo();
+    prevUnmasked = unmasked;
+
+    if (live) {
+      var act = num(live.actual_cost_usd);
+      var inTok = num(live.actual_input_tokens);
+      var outTok = num(live.actual_output_tokens);
+      var hasTelemetry = act > 0 || inTok > 0 || outTok > 0;
+      var est = num(live.est_cost_usd);
+      target.hero = hasTelemetry ? Math.max(act, est) : est;
+      target.pages = num(live.pages_served);
+      clockBase = num(live.seconds_trapped);
+      clockAt = Date.now();
+      clockRunning = live.status !== "ENDED";
+      if (!clockRunning || REDUCED) target.secs = clockBase;
+
+      setText(el.heroNote, hasTelemetry ? "api tokens they waste" : "estimated burn so far");
+      setText(el.canary, str(live.canary) ? ("canary " + live.canary) : "canary —");
+
+      if (str(live.codename)) {
+        el.challenger.className = "challenger";
+        el.challenger.innerHTML = 'challenger <b>' + esc(live.codename) + '</b>';
+      } else {
+        el.challenger.className = "challenger idle";
+        setText(el.challenger, "challenger unidentified");
+      }
+
+      if (hasTelemetry && act > 0 && est > 0 && act >= est) setText(el.gapMult, (act/est).toFixed(1) + "×");
+      else setText(el.gapMult, "—");
+    } else {
+      target.hero = 0; target.pages = 0; target.secs = 0; clockRunning = false;
+      setText(el.heroNote, "api tokens they waste");
+      setText(el.canary, "canary —");
+      el.challenger.className = "challenger idle";
+      setText(el.challenger, "no challenger yet");
+      setText(el.gapMult, "—");
+    }
+
+    renderTicker(state.events);
+    renderHall(state.leaderboard, live ? live.session_id : null);
+    if (REDUCED) paint();
+  }
+
+  var lastGood = null, srcState = null;
+  function setSrc(kind){
+    if (srcState === kind) return;
+    srcState = kind;
+    if (kind === "live") el.srcPill.hidden = true;
+    else {
+      el.srcPill.hidden = false;
+      setText(el.srcPill, kind === "stale" ? "link lost" : "offline · mock");
+    }
+  }
+  function fallback(){
+    if (lastGood) { setSrc("stale"); apply(lastGood); return; }
+    setSrc("mock");
+    apply(REDUCED ? MOCK : mockState());
+  }
+  function poll(){
+    var settled = false;
+    var timer = setTimeout(function(){ if (!settled){ settled = true; fallback(); } }, POLL_MS * 2);
+    var p;
+    try { p = fetch("/api/state", { cache:"no-store" }); }
+    catch (e) { clearTimeout(timer); settled = true; fallback(); return; }
+    p.then(function(r){ if (!r.ok) throw new Error("http"); return r.json(); })
+     .then(function(data){
+       if (settled) return;
+       settled = true; clearTimeout(timer);
+       if (!data || typeof data !== "object" || !("trap" in data)) throw new Error("shape");
+       lastGood = data; setSrc("live"); apply(data);
+     })["catch"](function(){ if (!settled){ settled = true; clearTimeout(timer); fallback(); } });
+  }
+
+  el.board.addEventListener("click", function(e){
+    var row = e.target.closest && e.target.closest(".row");
+    if (row) openSheet(row.getAttribute("data-sid"));
+  });
+  el.board.addEventListener("keydown", function(e){
+    if (e.key !== "Enter" && e.key !== " ") return;
+    var row = e.target.closest && e.target.closest(".row");
+    if (!row) return;
+    e.preventDefault();
+    openSheet(row.getAttribute("data-sid"));
+  });
+  el.sheetClose.addEventListener("click", closeSheet);
+  el.sheetBg.addEventListener("click", closeSheet);
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape" && sheetOpen) closeSheet(); });
+
+  (function bootHero(){
+    var node = el.heroCost;
+    node.textContent = "";
+    node.appendChild(document.createTextNode("$0.0000"));
+    var d = document.createElement("span");
+    d.className = "drips"; d.setAttribute("aria-hidden","true");
+    d.innerHTML = '<i class="drip d1"></i><i class="drip d2"></i><i class="drip d3"></i>';
+    node.appendChild(d);
+  })();
+
+  if (REDUCED) paint();
+  else (function frame(){ paint(); requestAnimationFrame(frame); })();
+
+  // ---------- controls wiring (our functionality on her design) ----------
+  function post(u){ return fetch(u, { method:"POST" }).then(function(r){ return r.json(); }); }
+  var btnAll = $("btnAll"), btnOne = $("btnOne"), btnReset = $("btnReset"), modelSel = $("model");
+  if (btnAll) btnAll.onclick = function(){ post("/api/run-all")["catch"](function(){}); };
+  if (btnOne) btnOne.onclick = function(){
+    var v = modelSel ? modelSel.value : "gpt-4o-mini";
+    var u = v === "__classic__" ? "/api/launch?mode=classic" : "/api/launch?mode=real&model=" + encodeURIComponent(v);
+    post(u)["catch"](function(){});
+  };
+  if (btnReset) btnReset.onclick = function(){ lastGood = null; post("/api/reset")["catch"](function(){}); };
+
+  function pollStatus(){
+    fetch("/api/attack-status", { cache:"no-store" }).then(function(r){ return r.json(); })
+      .then(function(s){ if (btnAll) btnAll.disabled = !!s.running; })["catch"](function(){});
+  }
+  setInterval(pollStatus, 1000); pollStatus();
+  setInterval(pollSheetLive, POLL_MS);
+
+  poll();
+  setInterval(poll, POLL_MS);
+})();
+</script>
+</body>
+</html>

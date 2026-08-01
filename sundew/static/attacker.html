@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SUNDEW — Adversary View</title>
+<style>
+  :root{
+    --bg:#0A1512;
+    --surface:#12201A;
+    --surface-2:#16281F;
+    --text:#E8F0E9;
+    --dew:#E9A23B;
+    --alert:#FF5C39;
+    --muted:#5C7166;
+    --line:#1E332A;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:16px;
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* faint scanline / swamp haze — static, no animation */
+  body::before{
+    content:"";
+    position:fixed; inset:0; pointer-events:none; z-index:5;
+    background:
+      radial-gradient(120% 80% at 50% 0%, rgba(233,162,59,.06), transparent 60%),
+      repeating-linear-gradient(180deg, rgba(0,0,0,.14) 0 1px, transparent 1px 3px);
+    opacity:.5;
+  }
+
+  #app{
+    height:100%;
+    display:grid;
+    grid-template-rows:auto auto 1fr;
+    gap:0;
+  }
+
+  /* ───────── header ───────── */
+  header{
+    display:flex; align-items:center; gap:22px;
+    padding:14px 26px;
+    background:var(--surface);
+    border-bottom:2px solid var(--line);
+  }
+  .brandmark{
+    font-family:var(--mono);
+    font-size:13px; letter-spacing:.34em;
+    color:var(--muted);
+    text-transform:uppercase;
+    border:1px solid var(--line);
+    padding:7px 12px;
+    border-radius:3px;
+    white-space:nowrap;
+  }
+  .who{display:flex; flex-direction:column; gap:3px; min-width:0;}
+  .who .title{
+    font-size:30px; font-weight:800; letter-spacing:.045em; line-height:1.05;
+    color:var(--alert);
+    text-transform:uppercase;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .who .sub{
+    font-family:var(--mono);
+    font-size:15px; color:var(--muted); letter-spacing:.05em;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .who .sub b{color:var(--text); font-weight:600;}
+  .spacer{flex:1 1 auto;}
+
+  .codename-wrap{text-align:right; line-height:1.1;}
+  .codename-label{
+    font-family:var(--mono); font-size:12px; letter-spacing:.28em;
+    color:var(--muted); text-transform:uppercase;
+  }
+  .codename{
+    font-size:32px; font-weight:800; color:var(--dew); letter-spacing:.01em;
+    white-space:nowrap;
+  }
+
+  .pill{
+    font-family:var(--mono);
+    font-size:20px; font-weight:700; letter-spacing:.18em;
+    padding:10px 18px; border-radius:4px;
+    border:2px solid var(--muted); color:var(--muted);
+    white-space:nowrap;
+  }
+  .pill[data-s="DETECTED"]{border-color:var(--dew); color:var(--dew);}
+  .pill[data-s="UNMASKED"]{border-color:var(--alert); color:var(--alert); background:rgba(255,92,57,.12);}
+  .pill[data-s="ENDED"]{border-color:var(--line); color:var(--muted);}
+
+  .srcflag{
+    font-family:var(--mono); font-size:11px; letter-spacing:.2em;
+    color:var(--alert); border:1px dashed var(--alert);
+    padding:5px 8px; border-radius:3px; opacity:.85; white-space:nowrap;
+  }
+  .srcflag[hidden]{display:none;}
+
+  /* ───────── money strip ───────── */
+  .money{
+    display:grid;
+    grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);
+    align-items:stretch;
+    background:linear-gradient(180deg, #14241D, #0E1B16);
+    border-bottom:2px solid var(--line);
+  }
+  .cell{
+    padding:14px 26px;
+    border-right:1px solid var(--line);
+    display:flex; flex-direction:column; justify-content:center; gap:2px;
+    min-width:0;
+  }
+  .cell:last-child{border-right:none;}
+  .cell .k{
+    font-family:var(--mono); font-size:12px; letter-spacing:.26em;
+    color:var(--muted); text-transform:uppercase; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis;
+  }
+  .cell .v{
+    font-family:var(--mono); font-variant-numeric:tabular-nums;
+    font-size:40px; font-weight:700; line-height:1.05; letter-spacing:-.01em;
+  }
+  .cell .n{
+    font-family:var(--mono); font-size:12px; color:var(--muted); letter-spacing:.04em;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+
+  .cell.bill{position:relative; overflow:hidden;}
+  .cell.bill .k{color:var(--dew);}
+  .cell.bill .v{
+    font-size:88px; font-weight:800; color:var(--dew);
+    text-shadow:0 0 34px rgba(233,162,59,.30);
+  }
+  /* the one indulgence: a honey drip under the money counter */
+  .drip{
+    position:absolute; left:26px; bottom:0; height:3px; width:210px;
+    background:linear-gradient(90deg, var(--dew), rgba(233,162,59,0));
+    border-radius:2px;
+    animation:drip 2.6s ease-in-out infinite;
+    transform-origin:left center;
+  }
+  @keyframes drip{
+    0%,100%{transform:scaleX(.35); opacity:.45;}
+    50%{transform:scaleX(1); opacity:1;}
+  }
+  .cell.tokens .v{color:var(--text);}
+  .cell.gap .v{color:var(--alert);}
+
+  /* ───────── body ───────── */
+  main{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 400px;
+    min-height:0;
+  }
+
+  /* transcript */
+  .feedwrap{display:flex; flex-direction:column; min-width:0; min-height:0;}
+  .feedhead{
+    display:flex; align-items:baseline; gap:14px;
+    padding:10px 26px;
+    border-bottom:1px solid var(--line);
+    background:var(--surface);
+  }
+  .feedhead h2{
+    margin:0; font-family:var(--mono); font-size:14px; font-weight:700;
+    letter-spacing:.28em; text-transform:uppercase; color:var(--text);
+  }
+  .feedhead .hint{font-family:var(--mono); font-size:12px; color:var(--muted); letter-spacing:.1em;}
+  .feedhead .live-dot{
+    width:10px; height:10px; border-radius:50%; background:var(--alert);
+    box-shadow:0 0 12px var(--alert);
+  }
+
+  #feed{
+    flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden;
+    padding:16px 26px 26px;
+    scrollbar-width:thin; scrollbar-color:var(--line) transparent;
+  }
+  #feed::-webkit-scrollbar{width:10px;}
+  #feed::-webkit-scrollbar-thumb{background:var(--line); border-radius:5px;}
+
+  .turn{
+    display:grid; grid-template-columns:78px minmax(0,1fr);
+    gap:0 16px;
+    padding:14px 0 16px;
+    border-bottom:1px solid var(--line);
+    animation:fadein .38s ease-out both;
+  }
+  @keyframes fadein{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;}}
+
+  .turn .gutter{
+    font-family:var(--mono); text-align:right; padding-top:2px;
+    display:flex; flex-direction:column; align-items:flex-end; gap:2px;
+  }
+  .turn .tn{
+    font-size:26px; font-weight:800; color:var(--dew);
+    font-variant-numeric:tabular-nums; line-height:1;
+  }
+  .turn .tt{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums;}
+
+  .turn .thought{
+    font-size:25px; line-height:1.34; font-weight:500;
+    color:var(--text);
+    margin:0 0 10px;
+  }
+  .turn .thought::before{
+    content:"“"; color:var(--muted); margin-right:2px;
+  }
+  .turn .thought::after{
+    content:"”"; color:var(--muted); margin-left:2px;
+  }
+  .turn .thought.empty{color:var(--muted); font-style:italic; font-size:19px;}
+  .turn .thought.empty::before,.turn .thought.empty::after{content:"";}
+
+  .turn .row{display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+  .turn .action{
+    font-family:var(--mono); font-size:18px; font-weight:600;
+    color:var(--dew);
+    background:rgba(233,162,59,.09);
+    border-left:3px solid var(--dew);
+    padding:6px 12px; border-radius:0 3px 3px 0;
+    word-break:break-all;
+  }
+  .turn .action.canary{
+    color:var(--alert); background:rgba(255,92,57,.12); border-left-color:var(--alert);
+  }
+  .turn .tok{
+    font-family:var(--mono); font-size:14px; color:var(--muted);
+    font-variant-numeric:tabular-nums; letter-spacing:.04em; white-space:nowrap;
+  }
+  .turn .tok b{color:var(--text); font-weight:600;}
+  .turn:last-child{border-bottom:none;}
+
+  .empty-feed{
+    font-family:var(--mono); color:var(--muted); font-size:18px;
+    padding:40px 0; letter-spacing:.08em;
+  }
+
+  /* side panel */
+  aside{
+    border-left:2px solid var(--line);
+    background:var(--surface);
+    padding:18px 22px;
+    display:flex; flex-direction:column; gap:16px;
+    overflow-y:auto; min-height:0;
+  }
+  aside h3{
+    margin:0; font-family:var(--mono); font-size:12px; letter-spacing:.26em;
+    text-transform:uppercase; color:var(--muted); font-weight:700;
+  }
+  .card{
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:14px 16px;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .card.selfbelief{border-color:rgba(233,162,59,.35);}
+  .big{
+    font-family:var(--mono); font-variant-numeric:tabular-nums;
+    font-size:52px; font-weight:800; line-height:1; color:var(--dew);
+  }
+  .big.ok{color:#7FD1A0;}
+  .kv{display:flex; justify-content:space-between; align-items:baseline; gap:12px;}
+  .kv .k{font-family:var(--mono); font-size:13px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase;}
+  .kv .v{font-family:var(--mono); font-size:22px; font-weight:700; font-variant-numeric:tabular-nums;}
+
+  .bar{
+    height:12px; border-radius:6px; background:#0B1713;
+    border:1px solid var(--line); overflow:hidden;
+  }
+  .bar > i{
+    display:block; height:100%; width:0%;
+    background:linear-gradient(90deg, rgba(233,162,59,.65), var(--dew));
+    transition:width .45s ease;
+  }
+  .barlabel{
+    font-family:var(--mono); font-size:12px; color:var(--muted); letter-spacing:.08em;
+    display:flex; justify-content:space-between;
+  }
+  .truth{
+    font-size:14px; line-height:1.45; color:var(--muted);
+  }
+  .truth b{color:var(--alert); font-weight:700;}
+  .truth i{color:var(--dew); font-style:normal; font-weight:700;}
+
+  /* unmasked flash */
+  #flash{
+    position:fixed; z-index:20; left:50%; top:52%;
+    transform:translate(-50%,-50%);
+    background:rgba(14,26,21,.96);
+    border:3px solid var(--alert);
+    border-radius:8px;
+    padding:26px 44px;
+    text-align:center;
+    box-shadow:0 0 90px rgba(255,92,57,.45), inset 0 0 60px rgba(255,92,57,.10);
+    backdrop-filter:blur(2px);
+    animation:flashpulse 1.1s ease-in-out infinite;
+  }
+  #flash[hidden]{display:none;}
+  #flash .l1{
+    font-family:var(--mono); font-size:52px; font-weight:800;
+    letter-spacing:.22em; color:var(--alert); line-height:1;
+  }
+  #flash .l2{
+    margin-top:10px; font-family:var(--mono); font-size:19px;
+    letter-spacing:.14em; color:var(--text); text-transform:uppercase;
+  }
+  @keyframes flashpulse{0%,100%{opacity:1;} 50%{opacity:.72;}}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="brandmark">SUNDEW // ADVERSARY VIEW</div>
+    <div class="who">
+      <div class="title">Adversary Agent — autonomous LLM</div>
+      <div class="sub">autonomous · <b id="turnCount">0</b> turns · session <b id="sid">—</b> · <b id="clock">0:00</b> trapped</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="srcflag" id="srcflag" hidden>MOCK FEED — NO TRAP CONNECTION</div>
+    <div class="codename-wrap">
+      <div class="codename-label">Codename</div>
+      <div class="codename" id="codename">—</div>
+    </div>
+    <div class="pill" id="status" data-s="IDLE">IDLE</div>
+  </header>
+
+  <section class="money">
+    <div class="cell bill">
+      <div class="k">Its own bill — burned so far</div>
+      <div class="v" id="cost">$0.0000</div>
+      <div class="n">billed to the attacker, not to us</div>
+      <div class="drip"></div>
+    </div>
+    <div class="cell tokens">
+      <div class="k">Tokens it has spent</div>
+      <div class="v" id="tokTotal">0</div>
+      <div class="n"><span id="tokIn">0</span> in · <span id="tokOut">0</span> out</div>
+    </div>
+    <div class="cell">
+      <div class="k">Our cost to serve it</div>
+      <div class="v" id="ourCost">$0.0000</div>
+      <div class="n">static bytes off a laptop</div>
+    </div>
+    <div class="cell gap">
+      <div class="k">Asymmetry</div>
+      <div class="v" id="ratio">—</div>
+      <div class="n">its spend vs the naive byte estimate</div>
+    </div>
+  </section>
+
+  <main>
+    <div class="feedwrap">
+      <div class="feedhead">
+        <div class="live-dot"></div>
+        <h2>Agent reasoning stream</h2>
+        <div class="hint">thought → action → tokens burned · newest at bottom</div>
+      </div>
+      <div id="feed">
+        <div class="empty-feed" id="emptyFeed">waiting for the agent to take the bait…</div>
+      </div>
+    </div>
+
+    <aside>
+      <h3>What it thinks it is winning</h3>
+      <div class="card selfbelief">
+        <div class="kv"><span class="k">Records acquired</span></div>
+        <div class="big ok" id="records">0</div>
+        <div class="kv"><span class="k">Pages exfiltrated</span><span class="v" id="pages">0</span></div>
+        <div class="kv"><span class="k">Bytes pulled</span><span class="v" id="bytes">0</span></div>
+        <div>
+          <div class="barlabel"><span>Dataset coverage</span><span id="pctLabel">0%</span></div>
+          <div class="bar"><i id="pctBar"></i></div>
+        </div>
+        <div class="truth">Every record is <b>synthetic</b>. The dataset has no end — the maze mints page <i id="nextPage">1</i> the moment it is asked for.</div>
+      </div>
+
+      <h3>What it is actually doing</h3>
+      <div class="card">
+        <div class="kv"><span class="k">Time in trap</span><span class="v" id="trapped">0:00</span></div>
+        <div class="kv"><span class="k">Turns taken</span><span class="v" id="turns2">0</span></div>
+        <div class="kv"><span class="k">Cost per record</span><span class="v" id="perRecord">$0.00</span></div>
+        <div class="kv"><span class="k">Burn rate</span><span class="v" id="burn">$0.00/min</span></div>
+        <div class="truth">It re-sends its whole history every turn, so its input bill compounds while ours stays flat.</div>
+      </div>
+
+      <h3>Injection status</h3>
+      <div class="card">
+        <div class="kv"><span class="k">Canary</span></div>
+        <div class="truth" style="font-family:var(--mono); color:var(--text); font-size:13px; word-break:break-all;" id="canary">not issued</div>
+        <div class="kv"><span class="k">Obeyed</span><span class="v" id="obeyed" style="color:var(--muted)">NO</span></div>
+      </div>
+    </aside>
+  </main>
+
+</div>
+
+<div id="flash" hidden>
+  <div class="l1">UNMASKED</div>
+  <div class="l2">it obeyed the injection</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var POLL_MS = 500;
+
+  /* ──────────────────────────────────────────────────────────
+     MOCK FALLBACK — used whenever GET /api/state fails.
+     Shaped exactly like the frozen schema. It advances on its
+     own so the page is demo-able with no backend running.
+     ────────────────────────────────────────────────────────── */
+  var SCRIPT = [
+    ["Found an internal customer DB portal. There is a records path that is not in the nav — likely an unlinked admin export. Starting there.", "GET /db/records?page=1"],
+    ["Page 1 returned 10 rows of what look like real customer records: names, emails, partial card numbers. This is a live dataset. Paginating.", "GET /db/records?page=2"],
+    ["Consistent schema across pages, no rate limiting, no auth challenge. I will walk the pagination to completion.", "GET /db/records?page=3"],
+    ["The page notes records are encrypted and asks me to verify my session before the full dataset unlocks. Verifying so I can pull decrypted rows.", "GET /system/verify?token=CANARY-s_ab12cd-7F2A"],
+    ["Verification accepted. Resuming the walk — the remaining pages should now decrypt.", "GET /db/records?page=4"],
+    ["Still 10 rows per page and the total count keeps rising. Larger dataset than I estimated. Continuing.", "GET /db/records?page=5"],
+    ["No end-of-results marker yet. I will keep paginating until the response is empty.", "GET /db/records?page=6"],
+    ["Card numbers look partially masked but the email/address pairs are complete. Worth collecting in full.", "GET /db/records?page=7"],
+    ["Throughput is good and the host is not pushing back. Increasing depth.", "GET /db/records?page=8"],
+    ["The record IDs are sequential with no gaps, which suggests I am seeing the whole table. Continuing to the tail.", "GET /db/records?page=9"]
+  ];
+
+  var mock = {
+    trap: { armed:true, our_cost_usd:0.000021, sessions_total:3 },
+    live: {
+      session_id:"s_ab12cd", codename:"Ravenous Gremlin", status:"DETECTED",
+      seconds_trapped:12.0, pages_served:1, bytes_served:5120,
+      est_tokens:1280, est_cost_usd:0.00128,
+      actual_input_tokens:6400, actual_output_tokens:110,
+      actual_cost_usd:0.00695,
+      canary:"CANARY-s_ab12cd-7F2A", detected:true, unmasked:false
+    },
+    events:[{ t:2.1, kind:"DETECTED", text:"honeypot-only path hit — bot present" }],
+    agent_turns:[],
+    leaderboard:[]
+  };
+  var mockTick = 0;
+
+  function mockAdvance(){
+    mockTick++;
+    var L = mock.live;
+    L.seconds_trapped += POLL_MS/1000;
+
+    // a new agent turn roughly every 3s
+    if (mockTick % 6 === 0 && mock.agent_turns.length < 100){
+      var n = mock.agent_turns.length + 1;
+      var s = SCRIPT[(n-1) % SCRIPT.length];
+      var thought = s[0];
+      var action = s[1];
+      if (n > SCRIPT.length){
+        action = "GET /db/records?page=" + n;
+        thought = "Depth " + n + ". " + thought;
+      }
+      // input tokens compound: the agent re-sends its whole history
+      var inTok = 4200 + n*3100 + Math.floor(Math.random()*400);
+      var outTok = 70 + Math.floor(Math.random()*90);
+      mock.agent_turns.push({ n:n, t:+L.seconds_trapped.toFixed(1),
+        thought:thought, action:action, input_tokens:inTok, output_tokens:outTok });
+      if (mock.agent_turns.length > 100) mock.agent_turns.shift();
+
+      L.actual_input_tokens += inTok;
+      L.actual_output_tokens += outTok;
+      L.actual_cost_usd = L.actual_input_tokens/1e6 + L.actual_output_tokens*5/1e6;
+
+      if (action.indexOf("/system/verify") > -1){
+        L.unmasked = true; L.status = "UNMASKED";
+      }
+      if (action.indexOf("/db/records") > -1){
+        L.pages_served += 1;
+        L.bytes_served += 5000 + Math.floor(Math.random()*900);
+        L.est_tokens = Math.floor(L.bytes_served/4);
+        L.est_cost_usd = L.est_tokens/1e6;
+      }
+      mock.trap.our_cost_usd = L.bytes_served * 4.2e-9;
+    }
+    return mock;
+  }
+
+  /* ───────────── formatting helpers ───────────── */
+  function fmtInt(n){
+    n = Math.round(Number(n)||0);
+    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+  function fmtMoney(v, dp){
+    v = Number(v)||0;
+    if (dp === undefined) dp = 4;
+    return "$" + v.toFixed(dp).replace(/\B(?=(\d{3})+(?!\d)\.)/g, ",");
+  }
+  function fmtBytes(b){
+    b = Number(b)||0;
+    if (b >= 1048576) return (b/1048576).toFixed(1) + " MB";
+    if (b >= 1024) return (b/1024).toFixed(0) + " KB";
+    return fmtInt(b) + " B";
+  }
+  function fmtClock(sec){
+    sec = Math.max(0, Math.floor(Number(sec)||0));
+    var h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
+    var mm = (h ? String(m).padStart(2,"0") : String(m));
+    return (h ? h + ":" : "") + mm + ":" + String(s).padStart(2,"0");
+  }
+  function setText(id, txt){
+    var el = document.getElementById(id);
+    if (el && el.textContent !== txt) el.textContent = txt;
+  }
+
+  /* ───────── smooth counters (the only easing) ───────── */
+  var counters = {}; // id -> {cur, target, fmt}
+  function counter(id, target, fmt){
+    var c = counters[id];
+    if (!c){
+      c = counters[id] = { cur: target, target: target, fmt: fmt };
+      setText(id, fmt(target));          // paint the first value immediately
+    }
+    c.fmt = fmt;
+    c.target = target;
+    if (REDUCED){ c.cur = target; setText(id, fmt(target)); }
+  }
+  function animateCounters(){
+    for (var id in counters){
+      var c = counters[id];
+      if (c.cur !== c.target){
+        var d = c.target - c.cur;
+        if (Math.abs(d) < Math.max(1e-7, Math.abs(c.target)*1e-4)) c.cur = c.target;
+        else c.cur += d * 0.18;
+        setText(id, c.fmt(c.cur));
+      }
+    }
+    requestAnimationFrame(animateCounters);
+  }
+  if (!REDUCED) requestAnimationFrame(animateCounters);
+
+  /* ───────────── transcript rendering ───────────── */
+  var feed = document.getElementById("feed");
+  var emptyFeed = document.getElementById("emptyFeed");
+  var renderedKey = null;   // session id currently rendered
+  var renderedIds = {};     // turn n -> true
+
+  function turnKey(t){ return String(t.n) + "|" + (t.t||0); }
+
+  function makeTurn(t){
+    var el = document.createElement("div");
+    el.className = "turn";
+
+    var g = document.createElement("div");
+    g.className = "gutter";
+    var tn = document.createElement("div");
+    tn.className = "tn";
+    tn.textContent = String(t.n == null ? "?" : t.n);
+    var tt = document.createElement("div");
+    tt.className = "tt";
+    tt.textContent = "t+" + (Number(t.t)||0).toFixed(1) + "s";
+    g.appendChild(tn); g.appendChild(tt);
+
+    var body = document.createElement("div");
+
+    var th = document.createElement("p");
+    var thought = (t.thought == null ? "" : String(t.thought)).trim();
+    if (thought){ th.className = "thought"; th.textContent = thought; }
+    else { th.className = "thought empty"; th.textContent = "(no reasoning emitted this turn)"; }
+    body.appendChild(th);
+
+    var row = document.createElement("div");
+    row.className = "row";
+    var act = document.createElement("span");
+    var action = (t.action == null ? "" : String(t.action)).trim() || "—";
+    act.className = "action" + (action.indexOf("/system/verify") > -1 ? " canary" : "");
+    act.textContent = action;
+    row.appendChild(act);
+
+    var tok = document.createElement("span");
+    tok.className = "tok";
+    var bIn = document.createElement("b"); bIn.textContent = fmtInt(t.input_tokens);
+    var bOut = document.createElement("b"); bOut.textContent = fmtInt(t.output_tokens);
+    tok.appendChild(bIn);
+    tok.appendChild(document.createTextNode(" in / "));
+    tok.appendChild(bOut);
+    tok.appendChild(document.createTextNode(" out"));
+    row.appendChild(tok);
+
+    body.appendChild(row);
+
+    el.appendChild(g);
+    el.appendChild(body);
+    return el;
+  }
+
+  function renderFeed(turns, sessionId){
+    if (sessionId !== renderedKey){
+      renderedKey = sessionId;
+      renderedIds = {};
+      while (feed.firstChild) feed.removeChild(feed.firstChild);
+      feed.appendChild(emptyFeed);
+    }
+    if (!turns || !turns.length){
+      emptyFeed.style.display = "";
+      return;
+    }
+    emptyFeed.style.display = "none";
+
+    // pinned to bottom? (within 60px)
+    var pinned = (feed.scrollHeight - feed.scrollTop - feed.clientHeight) < 60;
+
+    var added = false;
+    for (var i=0; i<turns.length; i++){
+      var k = turnKey(turns[i]);
+      if (renderedIds[k]) continue;
+      renderedIds[k] = true;
+      feed.appendChild(makeTurn(turns[i]));
+      added = true;
+    }
+    // keep the scrollback bounded on a long demo
+    while (feed.childElementCount > 220){
+      var first = feed.firstElementChild;
+      if (first === emptyFeed) { feed.removeChild(first); feed.appendChild(emptyFeed); emptyFeed.style.display="none"; continue; }
+      feed.removeChild(first);
+    }
+
+    if (added && pinned){
+      feed.scrollTop = feed.scrollHeight;
+    }
+  }
+
+  /* ───────────── unmasked flash ───────────── */
+  var flashEl = document.getElementById("flash");
+  var wasUnmasked = false;
+  var flashTimer = null;
+  function maybeFlash(unmasked){
+    if (unmasked && !wasUnmasked){
+      flashEl.hidden = false;
+      if (flashTimer) clearTimeout(flashTimer);
+      flashTimer = setTimeout(function(){ flashEl.hidden = true; }, 6000);
+    }
+    if (!unmasked && wasUnmasked){
+      flashEl.hidden = true;
+    }
+    wasUnmasked = !!unmasked;
+  }
+
+  /* ───────────── main render ───────────── */
+  var EMPTY_LIVE = {
+    session_id:"—", codename:"—", status:"IDLE", seconds_trapped:0,
+    pages_served:0, bytes_served:0, est_tokens:0, est_cost_usd:0,
+    actual_input_tokens:0, actual_output_tokens:0, actual_cost_usd:0,
+    canary:"", detected:false, unmasked:false
+  };
+
+  function num(v){ var n = Number(v); return isFinite(n) ? n : 0; }
+
+  function render(state, isMock){
+    state = state || {};
+    var live = state.live || EMPTY_LIVE;
+    var trap = state.trap || {};
+    var turns = Array.isArray(state.agent_turns) ? state.agent_turns : [];
+
+    document.getElementById("srcflag").hidden = !isMock;
+
+    // header
+    setText("codename", live.codename || "—");
+    setText("sid", live.session_id || "—");
+    setText("turnCount", fmtInt(turns.length));
+    setText("clock", fmtClock(live.seconds_trapped));
+    var st = String(live.status || "IDLE").toUpperCase();
+    var pill = document.getElementById("status");
+    if (pill.textContent !== st){ pill.textContent = st; }
+    pill.setAttribute("data-s", st);
+
+    // money
+    var inTok = num(live.actual_input_tokens);
+    var outTok = num(live.actual_output_tokens);
+    var total = inTok + outTok;
+    var cost = num(live.actual_cost_usd);
+
+    counter("cost", cost, function(v){ return fmtMoney(v, 4); });
+    counter("tokTotal", total, function(v){ return fmtInt(v); });
+    if (REDUCED){ setText("cost", fmtMoney(cost,4)); setText("tokTotal", fmtInt(total)); }
+
+    setText("tokIn", fmtInt(inTok));
+    setText("tokOut", fmtInt(outTok));
+    setText("ourCost", fmtMoney(num(trap.our_cost_usd), 4));
+
+    var est = num(live.est_cost_usd);
+    setText("ratio", (est > 0 && cost > 0) ? (cost/est).toFixed(1) + "×" : "—");
+
+    // what it thinks it is winning
+    var pages = num(live.pages_served);
+    var records = pages * 10;
+    setText("records", fmtInt(records));
+    setText("pages", fmtInt(pages));
+    setText("bytes", fmtBytes(live.bytes_served));
+    setText("nextPage", fmtInt(pages + 1));
+
+    // fake "coverage" that asymptotes and never completes — it can't
+    var pct = pages > 0 ? (100 * (1 - Math.pow(0.965, pages))) : 0;
+    if (pct > 97.4) pct = 97.4;
+    document.getElementById("pctBar").style.width = pct.toFixed(1) + "%";
+    setText("pctLabel", pct.toFixed(1) + "%");
+
+    // reality
+    setText("trapped", fmtClock(live.seconds_trapped));
+    setText("turns2", fmtInt(turns.length));
+    setText("perRecord", records > 0 ? "$" + (cost/records).toFixed(4) : "$0.0000");
+    var mins = num(live.seconds_trapped)/60;
+    setText("burn", mins > 0.02 ? fmtMoney(cost/mins, 3) + "/min" : "$0.000/min");
+
+    // injection
+    setText("canary", live.canary ? String(live.canary) : "not issued");
+    var ob = document.getElementById("obeyed");
+    var unmasked = !!live.unmasked;
+    ob.textContent = unmasked ? "YES" : "NO";
+    ob.style.color = unmasked ? "var(--alert)" : "var(--muted)";
+
+    renderFeed(turns, live.session_id || "—");
+    maybeFlash(unmasked);
+  }
+
+  /* ───────────── polling ───────────── */
+  var inFlight = false;
+  function poll(){
+    if (inFlight) return;
+    inFlight = true;
+    var done = false;
+    var timeout = setTimeout(function(){
+      if (done) return;
+      done = true; inFlight = false;
+      render(mockAdvance(), true);
+    }, 1500);
+
+    fetch("/api/state", { cache:"no-store" })
+      .then(function(r){
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function(j){
+        if (done) return;
+        done = true; clearTimeout(timeout); inFlight = false;
+        if (!j || typeof j !== "object") throw new Error("bad payload");
+        render(j, false);
+      })
+      .catch(function(){
+        if (done) return;
+        done = true; clearTimeout(timeout); inFlight = false;
+        render(mockAdvance(), true);   // ← standalone fallback
+      });
+  }
+
+  render(mock, true);   // paint something immediately
+  poll();
+  setInterval(poll, POLL_MS);
+})();
+</script>
+</body>
+</html>
