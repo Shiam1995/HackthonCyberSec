@@ -1,0 +1,7 @@
+# the engine is a separate ~8GB project, symlinked in locally
+engine
+
+__pycache__/
+*.pyc
+.venv/
+.DS_Store

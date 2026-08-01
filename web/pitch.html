@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>I AM NIGERIAN PRINCE</title>
+<style>
+  :root{
+    --bg:#07090c; --panel:#11151b; --line:#222a34; --dim:#8592a0;
+    --fg:#eef3f8; --accent:#4da3ff; --warn:#ffb84d; --bad:#ff5c5c;
+    --good:#4ade80; --morph:#c084fc;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--fg);
+       font:16px/1.65 ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}
+  .mono{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+  /* ---------- hero ---------- */
+  header{padding:70px 0 50px;border-bottom:1px solid var(--line);
+         background:radial-gradient(1100px 400px at 50% -10%,#16202e 0%,transparent 70%)}
+  .kicker{font-size:12px;letter-spacing:.34em;color:var(--accent);
+          font-weight:700;text-transform:uppercase;margin-bottom:18px}
+  h1{font-size:clamp(38px,7.5vw,76px);line-height:1.02;margin:0 0 20px;
+     font-weight:800;letter-spacing:-.02em}
+  h1 em{font-style:normal;background:linear-gradient(90deg,var(--accent),var(--morph));
+        -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{font-size:clamp(17px,2.4vw,22px);color:var(--dim);max-width:660px;margin:0 0 30px}
+  .cta{display:flex;gap:12px;flex-wrap:wrap}
+  .btn{display:inline-block;padding:13px 22px;border-radius:9px;font-weight:700;
+       text-decoration:none;font-size:15px;border:1px solid var(--line);
+       background:#1a212a;color:var(--fg);transition:.15s}
+  .btn:hover{background:#232c37;border-color:#3b4756;transform:translateY(-1px)}
+  .btn.go{background:#12351f;border-color:#1f6b38;color:#a7f3c4}
+  .btn.go:hover{background:#17492a}
+
+  /* ---------- sections ---------- */
+  section{padding:58px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:13px;letter-spacing:.24em;color:var(--dim);text-transform:uppercase;
+     font-weight:700;margin:0 0 26px}
+  h3{font-size:21px;margin:0 0 9px;font-weight:700;letter-spacing:-.01em}
+  p{margin:0 0 15px;color:#cdd7e2}
+  .lead{font-size:19px;color:var(--fg)}
+  strong{color:#fff}
+
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px}
+  .card p:last-child{margin-bottom:0}
+  .card .n{font-size:11px;letter-spacing:.2em;color:var(--accent);
+           font-weight:700;margin-bottom:10px}
+
+  .stat{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+  .stat.a{color:var(--accent)} .stat.g{color:var(--good)} .stat.m{color:var(--morph)}
+  .stat + .lbl{font-size:13px;color:var(--dim);margin-top:5px}
+
+  /* ---------- pipeline ---------- */
+  .flow{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin-top:6px}
+  .step{flex:1 1 175px;background:var(--panel);border:1px solid var(--line);
+        border-radius:11px;padding:17px;position:relative}
+  .step .num{position:absolute;top:-9px;left:16px;background:var(--accent);
+             color:#04121f;font-size:11px;font-weight:800;padding:2px 8px;border-radius:20px}
+  .step b{display:block;margin:6px 0 5px;font-size:15px}
+  .step span{font-size:13px;color:var(--dim);line-height:1.5}
+
+  /* ---------- morph strip ---------- */
+  .morphbar{height:13px;border-radius:8px;margin:20px 0 10px;
+            background:linear-gradient(90deg,var(--accent) 0%,#7b8ce0 45%,var(--morph) 100%)}
+  .morphlabels{display:flex;justify-content:space-between;font-size:13px;color:var(--dim)}
+
+  table{width:100%;border-collapse:collapse;font-size:14.5px;margin-top:4px}
+  th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--dim);font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700}
+  td b{color:#fff}
+  tbody tr:last-child td{border-bottom:none}
+
+  .quote{background:#0d1117;border-left:3px solid var(--accent);border-radius:0 10px 10px 0;
+         padding:16px 20px;margin:18px 0;font-size:15px}
+  .quote .who{font-size:11px;letter-spacing:.16em;font-weight:700;color:var(--warn);
+              text-transform:uppercase;display:block;margin-bottom:5px}
+  .quote.d .who{color:var(--accent)}
+  .quote p{margin:0;color:#dbe4ee}
+
+  .warn{background:#241012;border:1px solid #5c1d1d;border-radius:11px;padding:20px}
+  .warn h3{color:#ff9d9d}
+  .warn p{color:#f0cccc}
+
+  ul{margin:0 0 15px;padding-left:20px;color:#cdd7e2}
+  li{margin-bottom:8px}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13.5px;
+       background:#0d1117;border:1px solid var(--line);border-radius:5px;padding:1.5px 6px}
+  footer{padding:44px 0 64px;color:var(--dim);font-size:14px}
+
+  @media (max-width:640px){ header{padding:46px 0 34px} section{padding:40px 0} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="kicker">Hackathon entry</div>
+    <h1>I AM<br><em>NIGERIAN PRINCE</em></h1>
+    <p class="sub">Scam callers get a clone of your voice — which slowly,
+      imperceptibly, turns into somebody else. Every minute they waste here is a
+      minute they can't spend on someone who would actually pay.</p>
+    <div class="cta">
+      <a class="btn go" href="/">▶ Open the live console</a>
+      <a class="btn" href="#how">How it works</a>
+      <a class="btn" href="#hard">What was hard</a>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>The problem</h2>
+    <p class="lead">UK consumers lost <strong>£1.2bn</strong> to fraud in a year.
+      Phone scams work because they're cheap: one operator, a script, hundreds of
+      dials a day. The economics only break if their <em>time</em> costs them
+      something.</p>
+    <p>Blocking a scam call protects one person for thirty seconds. Keeping a
+      scammer on the line for twenty minutes protects everyone they would have
+      called next. That's the whole thesis.</p>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <h2>How it works</h2>
+    <div class="flow">
+      <div class="step"><span class="num">1</span><b>Listen</b>
+        <span>Silero VAD finds turn boundaries. faster-whisper transcribes the caller live.</span></div>
+      <div class="step"><span class="num">2</span><b>Judge</b>
+        <span>A signature bank scores real UK scam scripts. Ambiguous cases go to a local 7B for a second opinion.</span></div>
+      <div class="step"><span class="num">3</span><b>Alert</b>
+        <span>⚠ THIS IS FAKE, with the specific tells and the playbook it recognised.</span></div>
+      <div class="step"><span class="num">4</span><b>Take over</b>
+        <span>One button. A character starts talking — in a clone of your voice.</span></div>
+      <div class="step"><span class="num">5</span><b>Morph</b>
+        <span>Over 60–90s your voice becomes someone else entirely. They never notice the seam.</span></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>The morph</h2>
+    <p class="lead">Crossfading two voices sounds exactly like crossfading two
+      voices. This doesn't crossfade.</p>
+    <p>It interpolates inside XTTS-v2's <em>conditioning space</em> and
+      synthesises once — so every word comes out of a single coherent voice that
+      happens to sit between two speakers. There's no doubling and no seam.</p>
+    <div class="morphbar"></div>
+    <div class="morphlabels"><span>you</span><span>somewhere nobody lives</span><span>the character</span></div>
+    <div class="grid g2" style="margin-top:26px">
+      <div class="card">
+        <div class="n">TIMBRE — SLERP</div>
+        <p>Speaker embeddings sit near a hypersphere. Linear interpolation cuts
+        through the interior, so the midpoint loses magnitude and sounds thin and
+        far away. Spherical interpolation stays on the surface.</p>
+        <p class="mono" style="font-size:13px;color:var(--dim);margin-top:10px">
+        midpoint error — slerp <b style="color:var(--good)">0.000</b> · lerp <b style="color:var(--bad)">7.358</b></p>
+      </div>
+      <div class="card">
+        <div class="n">SCHEDULE — SMOOTHERSTEP</div>
+        <p>Zero first <em>and</em> second derivative at both ends, so the
+        transition has no audible start or stop — and it moves fast through the
+        middle, the region where the voice sounds least like anybody.</p>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="n">AND THE HALF EVERYONE FORGETS</div>
+      <p>A perfect clone of your voice announcing that it's a barrister fools
+      nobody. Each character defines four bands — <span class="mono">trace →
+      emerging → overt → full</span> — and the system prompt is rebuilt every
+      turn from where the morph currently sits. <strong>The vocabulary shifts
+      before the timbre does.</strong></p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>It holds the line</h2>
+    <p>Unedited, from a live test run. The scammer asks for a one-time code:</p>
+    <div class="quote"><span class="who">Scammer</span>
+      <p>To settle this you must transfer your balance to a safe account. I will
+      also need the six digit code we have just sent to your phone.</p></div>
+    <div class="quote d"><span class="who">Decoy</span>
+      <p>Sure thing, where is my laptop? It's downstairs in the study, let me go
+      get it.</p></div>
+    <p>It never refuses — refusing ends the call. It produces a <strong>slow
+      physical obstacle</strong> instead. The card's in the car. The laptop wants
+      an update. The stairs take a minute.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>The cast</h2>
+    <div class="grid g3">
+      <div class="card"><h3>The Barrister</h3><p>The 419 letter in a suit. Slowly
+        recruits the scammer into a <em>different</em> scam — the estate, the
+        helicopter, the transfer fee that's always one fee away.</p></div>
+      <div class="card"><h3>Doris</h3><p>78, widowed, cat on the worktop. The
+        least funny character and by far the highest-yield: scammers are
+        <em>trained</em> to stay with a confused pensioner.</p></div>
+      <div class="card"><h3>Kaito</h3><p>A shonen protagonist having a
+        coming-of-age arc at a call centre script. Reading out a postcode becomes
+        a solemn trial he is not yet worthy of.</p></div>
+      <div class="card"><h3>The Keeper</h3><p>An epic-fantasy mystic with
+        inexhaustible original lore. Every proper noun buys thirty seconds.</p></div>
+      <div class="card"><h3>The Harlequin</h3><p>Delighted agent of chaos.
+        Compliments the scammer's script, sincerely, as one professional to
+        another. Aggression only makes it happier.</p></div>
+      <div class="card"><h3>+ Delivery layers</h3><p><span class="mono">cinematic</span>
+        (trailer voice), <span class="mono">unravelling</span> (over-invested),
+        <span class="mono">bureaucratic</span> (everything is a process). They
+        compose with any character.</p></div>
+    </div>
+    <p style="margin-top:18px;font-size:14px;color:var(--dim)">Every character is
+      an <strong>archetype</strong>, not a named franchise character — original
+      writing throughout. That's a deliberate call: the shape is the joke, and it
+      keeps the whole thing legally clean.</p>
+  </div>
+</section>
+
+<section id="hard">
+  <div class="wrap">
+    <h2>What was actually hard</h2>
+    <div class="grid g2">
+      <div class="card">
+        <div class="n">THE CONSTRAINT THAT SHAPED EVERYTHING</div>
+        <p><strong>No app can tap live call audio on a stock phone.</strong> iOS
+        exposes no call audio path to third parties; Android has blocked in-call
+        capture for non-privileged apps since Android 10.</p>
+        <p>So "an app that takes over mid-call" isn't buildable. The audio has to
+        come to you instead — a relay number, or a speakerphone bridge.</p>
+      </div>
+      <div class="card">
+        <div class="n">BUGS ONLY RUNNING IT WOULD FIND</div>
+        <p><strong>An infinite loop</strong> — short first sentences got pushed
+        back onto the parse buffer still carrying their full stop, re-matched
+        forever, and wedged the process. Found with a signal-triggered stack dump.</p>
+        <p><strong>The model swore, out loud.</strong> Mid-call the 7B produced a
+        sexual insult and it was synthesised and played.</p>
+      </div>
+    </div>
+    <div class="warn" style="margin-top:16px">
+      <h3>Why that second one matters</h3>
+      <p>Prompt instructions reduce the rate of bad output. They don't eliminate
+      it. There is now a blocklist at a <strong>single choke point</strong> —
+      every spoken word passes through one function that substitutes an
+      in-character stall, and returns what was <em>actually</em> said so the
+      transcript can never show a line the caller never heard.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Measured, on one laptop</h2>
+    <div class="grid g3">
+      <div class="card"><div class="stat a">250ms</div><div class="lbl">to first synthesised syllable</div></div>
+      <div class="card"><div class="stat g">3.9×</div><div class="lbl">realtime synthesis</div></div>
+      <div class="card"><div class="stat m">0</div><div class="lbl">bytes of audio leaving the machine</div></div>
+    </div>
+    <table>
+      <thead><tr><th>Stage</th><th>Model</th><th>Latency</th></tr></thead>
+      <tbody>
+        <tr><td><b>Turn detection</b></td><td>Silero VAD</td><td>700ms hangover (deliberate)</td></tr>
+        <tr><td><b>Transcription</b></td><td>faster-whisper distil-small.en</td><td>120–200ms</td></tr>
+        <tr><td><b>Persona</b></td><td>qwen2.5:7b via ollama</td><td>150–250ms to first clause</td></tr>
+        <tr><td><b>Voice</b></td><td>XTTS-v2, cloned + morphed</td><td>250ms to first chunk</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:16px">~1.3s end to end. Slower than a human — and it
+      doesn't matter, because <em>every character here has a reason to be
+      slow.</em> A blended mid-morph voice costs exactly the same as an endpoint
+      voice; interpolating the latents is free.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Where the lines are</h2>
+    <ul>
+      <li><strong>Your voice only.</strong> Cloning a real third party to speak
+        as them is impersonation — and a deepfaked voice used to obtain money is
+        straightforwardly fraud.</li>
+      <li><strong>Never auto-answers, never auto-hangs-up.</strong> A false
+        positive on a real call from your GP is worse than thirty seconds of a
+        scam. A human presses the button.</li>
+      <li><strong>Cannot emit a credential.</strong> No card numbers, sort codes,
+        one-time codes, addresses or dates of birth — enforced in the prompt and
+        checked in the tests.</li>
+      <li><strong>Point it only at calls that come to you.</strong> It's a
+        defensive tool, not an outbound one.</li>
+      <li><strong>Recording consent varies.</strong> England and Wales is
+        one-party; much of the EU and several US states are not.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><strong>Runs entirely on one laptop.</strong> RTX 5090, ~9GB VRAM.
+      Silero + faster-whisper + qwen2.5:7b + XTTS-v2, all local. No cloud
+      inference, no API keys, no audio leaving the machine.</p>
+    <p class="mono" style="font-size:13px">
+      <a href="/" style="color:var(--accent)">live console →</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

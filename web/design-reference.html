@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/broadsheet-693967f8-627b-4ea2-98ce-2e2351b3232f/styles.css">
+  <script src="_ds/broadsheet-693967f8-627b-4ea2-98ce-2e2351b3232f/_ds_bundle.js"></script>
+  <script src="./image-slot.js"></script>
+  <style>
+    body { margin: 0; }
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(-3deg) scale(1); }
+      50% { transform: rotate(3deg) scale(1.03); }
+    }
+    @keyframes barPulse {
+      0%, 100% { height: 18%; }
+      50% { height: 85%; }
+    }
+    @keyframes pulseOpacity {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+  </style>
+</helmet>
+<div style="display:flex;justify-content:center;padding:48px 24px;background:var(--color-bg);min-height:100vh;box-sizing:border-box">
+  <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+
+    <div style="position:relative;height:100%;width:100%;background:linear-gradient(180deg,#232325,#000);display:flex;flex-direction:column;align-items:center;color:#fff;font-family:-apple-system,system-ui,sans-serif;padding:52px 0 0;box-sizing:border-box;overflow:auto">
+
+      <div style="width:100%;padding:10px 20px;box-sizing:border-box;background:{{ bannerBg }};text-align:center">
+        <span style="font-family:var(--font-heading);font-weight:700;font-size:15px;color:var(--color-bg)">{{ bannerText }} &mdash; {{ scamPercent }}%</span>
+      </div>
+
+      <div style="margin-top:24px;font-size:24px;font-weight:600;letter-spacing:-0.01em">+1 (302) 555-0148</div>
+      <div style="margin-top:3px;font-size:14px;color:rgba(235,235,245,0.6)">mobile &middot; {{ callTime }}</div>
+
+      <!-- floating Broadsheet guardian widget — no card, whitespace-separated over the call screen -->
+      <div style="margin-top:26px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+          <span style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--color-accent-300)">Guardian &mdash; Active</span>
+          <span style="display:{{ nuclearLabelDisplay }};font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--color-accent-2-400);animation:pulseOpacity 1s ease-in-out infinite">Nuclear &mdash; Armed</span>
+        </div>
+
+        <div style="text-align:center;margin-top:var(--space-2)">
+          <div style="font-family:var(--font-heading);font-weight:700;font-size:60px;line-height:1;color:{{ riskColor }}">{{ scamPercent }}%</div>
+          <div style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-top:6px">Scam probability</div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:center;gap:var(--space-4);padding:var(--space-3) 0">
+          <div style="width:112px;height:112px;border-radius:50%;overflow:hidden;flex-shrink:0">
+            <svg viewBox="0 0 100 100" width="100%" height="100%">
+              <circle cx="50" cy="50" r="48" fill="#FFCC4D"/>
+              <path d="M22 36 L41 45" stroke="#664500" stroke-width="5" stroke-linecap="round" fill="none"/>
+              <path d="M78 36 L59 45" stroke="#664500" stroke-width="5" stroke-linecap="round" fill="none"/>
+              <circle cx="38" cy="54" r="4.5" fill="#664500"/>
+              <circle cx="62" cy="54" r="4.5" fill="#664500"/>
+              <path d="M30 74 Q50 60 70 74" stroke="#664500" stroke-width="6" stroke-linecap="round" fill="none"/>
+            </svg>
+          </div>
+          <div class="halftone" style="width:112px;height:112px;border-radius:50%;overflow:hidden;animation:{{ dancerAnim }}">
+            <image-slot id="guardian-dancer" shape="circle" src="{{ dancerSrc }}" placeholder="Dancing character"></image-slot>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:center;gap:var(--space-4);margin-top:var(--space-2);width:100%" onPointerDown="{{ onSwipeDown }}" onPointerUp="{{ onSwipeUp }}">
+          <button class="btn btn-icon btn-ghost" onClick="{{ onPrevPersona }}" aria-label="Previous persona" style="color:rgba(255,255,255,0.75)">
+            <svg width="18" height="18" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="18"><path d="M168 208 88 128l80-80"/></svg>
+          </button>
+          <div style="text-align:center;min-width:180px">
+            <div style="font-family:var(--font-heading);font-style:italic;font-size:18px;color:#fff">{{ personaName }}</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px">{{ personaTrait }}</div>
+          </div>
+          <button class="btn btn-icon btn-ghost" onClick="{{ onNextPersona }}" aria-label="Next persona" style="color:rgba(255,255,255,0.75)">
+            <svg width="18" height="18" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="18"><path d="M88 208l80-80-80-80"/></svg>
+          </button>
+        </div>
+
+        <button onClick="{{ toggleTakeover }}" style="margin-top:var(--space-4);border:none;cursor:pointer;font-family:var(--font-heading);font-weight:600;font-size:14px;padding:10px 22px;border-radius:var(--radius-md);color:var(--color-bg);background:{{ takeoverBg }}">{{ takeoverLabel }}</button>
+
+        <div style="display:{{ settingsDisplay }};flex-direction:column;gap:var(--space-4);margin-top:var(--space-4);width:220px">
+          <div>
+            <label style="display:block;font-size:11px;margin-bottom:6px;color:rgba(255,255,255,0.6)">Response delay &mdash; {{ delayLabel }}</label>
+            <input type="range" min="0" max="10" step="0.5" value="{{ delay }}" onChange="{{ onDelayChange }}" style="width:100%;accent-color:var(--color-accent-400)"/>
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;margin-bottom:6px;color:rgba(255,255,255,0.6)">References worked in &mdash; {{ references }}</label>
+            <input type="range" min="0" max="5" step="1" value="{{ references }}" onChange="{{ onReferencesChange }}" style="width:100%;accent-color:var(--color-accent-400)"/>
+          </div>
+        </div>
+
+        <div style="display:{{ charListDisplay }};flex-wrap:wrap;gap:8px;justify-content:center;margin-top:var(--space-4);max-width:260px">
+          <sc-for list="{{ personaList }}" as="p" hint-placeholder-count="6">
+            <button onClick="{{ p.select }}" style="border:1px solid {{ p.borderColor }};background:{{ p.bg }};color:{{ p.color }};font-size:12px;padding:6px 12px;border-radius:var(--radius-md);cursor:pointer;font-family:var(--font-heading)">{{ p.name }}</button>
+          </sc-for>
+        </div>
+
+        <div style="display:flex;justify-content:center;gap:var(--space-6);margin-top:var(--space-6)">
+          <button onClick="{{ toggleCharList }}" aria-label="Change character" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;cursor:pointer;color:{{ charIconColor }}">
+            <svg width="20" height="20" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="14"><path d="M60 96l-30-30 30-30M30 66h130a48 48 0 0 1 48 48v6"/><path d="M196 160l30 30-30 30M226 190H96a48 48 0 0 1-48-48v-6"/></svg>
+            <span style="font-size:9px;letter-spacing:0.08em;text-transform:uppercase">Characters</span>
+          </button>
+          <button onClick="{{ toggleSettings }}" aria-label="Settings" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;cursor:pointer;color:{{ settingsIconColor }}">
+            <svg width="20" height="20" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="14">
+              <circle cx="128" cy="128" r="36"/>
+              <path d="M197 128a68 68 0 0 0-1.4-14l24-18.7-20-34.6-28.2 9.5A69 69 0 0 0 149 55.4L145 26h-34l-4 29.4a69 69 0 0 0-22.4 13.8L56.4 60.7l-20 34.6L60.4 114A68 68 0 0 0 59 128a68 68 0 0 0 1.4 14l-24 18.7 20 34.6 28.2-9.5A69 69 0 0 0 107 200.6l4 29.4h34l4-29.4a69 69 0 0 0 22.4-13.8l28.2 9.5 20-34.6-24-18.7c.9-4.6 1.4-9.3 1.4-14Z"/>
+            </svg>
+            <span style="font-size:9px;letter-spacing:0.08em;text-transform:uppercase">Settings</span>
+          </button>
+          <button onClick="{{ toggleNuclear }}" aria-label="Nuclear option" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;cursor:pointer;color:{{ nuclearIconColor }}">
+            <svg width="20" height="20" viewBox="0 0 256 256" fill="none" stroke="currentColor" stroke-width="14"><path d="M128 32 16 216h224Z"/><path d="M128 100v52"/><circle cx="128" cy="180" r="3" fill="currentColor" stroke="none"/></svg>
+            <span style="font-size:9px;letter-spacing:0.08em;text-transform:uppercase">Nuclear</span>
+          </button>
+        </div>
+
+      </div>
+
+      <div style="margin-top:auto;width:100%;padding-bottom:56px;flex-shrink:0">
+        <div style="display:flex;justify-content:center;gap:26px;margin-bottom:26px">
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.16);display:flex;align-items:center;justify-content:center">
+            <svg width="24" height="24" viewBox="0 0 256 256" fill="none" stroke="#fff" stroke-width="14"><path d="M50 100v56M206 100v56M92 32h72v128a36 36 0 0 1-72 0Z"/><path d="M40 40l176 176"/></svg>
+          </div>
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.16);display:flex;align-items:center;justify-content:center">
+            <svg width="24" height="24" viewBox="0 0 256 256" fill="none" stroke="#fff" stroke-width="12"><rect x="40" y="56" width="176" height="144" rx="12"/><path d="M76 96h4M124 96h4M172 96h4M76 132h4M124 132h4M172 132h4M76 168h60"/></svg>
+          </div>
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.16);display:flex;align-items:center;justify-content:center">
+            <svg width="24" height="24" viewBox="0 0 256 256" fill="none" stroke="#fff" stroke-width="12"><rect x="48" y="72" width="112" height="112" rx="10"/><path d="M160 108l48-28v96l-48-28Z"/></svg>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:center">
+          <div style="width:72px;height:72px;border-radius:50%;background:#ff3b30;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(0,0,0,0.4)">
+            <svg width="30" height="30" viewBox="0 0 256 256" fill="#fff"><path d="M231 174l-45-19a12 12 0 0 0-12 2l-20 20a148 148 0 0 1-75-75l20-20a12 12 0 0 0 2-12L82 25a12 12 0 0 0-13-7l-42 10A12 12 0 0 0 18 40C18 156 100 226 216 226a12 12 0 0 0 12-9l10-42a12 12 0 0 0-7-1Z"/></svg>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </x-import>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: {&quot;width&quot;: 500, &quot;height&quot;: 940},
+  &quot;scamPercent&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 87, &quot;tsType&quot;: &quot;number&quot;, &quot;min&quot;: 0, &quot;max&quot;: 100, &quot;step&quot;: 1, &quot;section&quot;: &quot;Guardian&quot;},
+  &quot;defaultTakeover&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Guardian&quot;},
+  &quot;autoDemo&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Guardian&quot;}
+}">
+class Component extends DCLogic {
+  personas = [
+    { name: 'Confused Elder', trait: 'asks you to repeat everything twice' },
+    { name: 'Busy Executive', trait: 'curt, always stepping into a meeting' },
+    { name: 'Non-Native Speaker', trait: 'slow, asks you to spell it out' },
+    { name: 'Skeptical Teen', trait: 'one-word answers, doesn\u2019t buy it' },
+    { name: 'Deadpan Robot', trait: 'flat monotone, painfully literal' },
+    { name: 'Clueless Newcomer', trait: 'new to this, needs it explained' },
+  ];
+
+  state = { personaIndex: 0, settingsOpen: false, charListOpen: false, delay: 2.5, references: 2, seconds: 87, guardianActive: false, nuclearArmed: false };
+
+  componentDidMount() {
+    if (this.props.autoDemo ?? true) {
+      this._timer = setInterval(() => this.setState(s => ({ seconds: s.seconds + 1 })), 1000);
+    }
+    if (this.props.defaultTakeover) this.setState({ guardianActive: true });
+  }
+  componentWillUnmount() { clearInterval(this._timer); }
+
+  formatTime(total) {
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  nextPersona = () => this.setState(s => ({ personaIndex: (s.personaIndex + 1) % this.personas.length }));
+  prevPersona = () => this.setState(s => ({ personaIndex: (s.personaIndex - 1 + this.personas.length) % this.personas.length }));
+  toggleSettings = () => this.setState(s => ({ settingsOpen: !s.settingsOpen, charListOpen: false }));
+  toggleCharList = () => this.setState(s => ({ charListOpen: !s.charListOpen, settingsOpen: false }));
+  toggleTakeover = () => this.setState(s => ({ guardianActive: !s.guardianActive }));
+  toggleNuclear = () => this.setState(s => (s.nuclearArmed
+    ? { nuclearArmed: false }
+    : { nuclearArmed: true, guardianActive: true, delay: 0, references: 5 }));
+  selectPersona = (i) => this.setState({ personaIndex: i });
+  onDelayChange = (e) => this.setState({ delay: parseFloat(e.target.value) });
+  onReferencesChange = (e) => this.setState({ references: parseInt(e.target.value, 10) });
+  onSwipeDown = (e) => { this._dragX = e.clientX; };
+  onSwipeUp = (e) => {
+    if (this._dragX == null) return;
+    const dx = e.clientX - this._dragX;
+    this._dragX = null;
+    if (dx > 40) this.prevPersona();
+    else if (dx < -40) this.nextPersona();
+  };
+
+  renderVals() {
+    const scamPercent = Math.round(this.props.scamPercent ?? 87);
+    const riskColor = scamPercent >= 50 ? 'var(--color-accent-2-400)' : 'var(--color-accent-400)';
+    const persona = this.personas[this.state.personaIndex];
+    const nuclear = this.state.nuclearArmed;
+    const bannerText = scamPercent >= 50 ? 'Probably Scam' : 'Likely Safe';
+    const bannerBg = scamPercent >= 50 ? 'var(--color-accent-2-600)' : 'var(--color-accent-600)';
+    const personaList = this.personas.map((p, i) => ({
+      name: p.name,
+      select: () => this.selectPersona(i),
+      bg: i === this.state.personaIndex ? 'var(--color-accent)' : 'transparent',
+      color: i === this.state.personaIndex ? 'var(--color-bg)' : '#fff',
+      borderColor: i === this.state.personaIndex ? 'var(--color-accent)' : 'rgba(255,255,255,0.3)',
+    }));
+    return {
+      scamPercent, riskColor, bannerText, bannerBg,
+      personaName: persona.name, personaTrait: persona.trait,
+      onPrevPersona: this.prevPersona, onNextPersona: this.nextPersona,
+      onSwipeDown: this.onSwipeDown, onSwipeUp: this.onSwipeUp,
+      toggleSettings: this.toggleSettings,
+      settingsDisplay: this.state.settingsOpen ? 'flex' : 'none',
+      settingsIconColor: this.state.settingsOpen ? 'var(--color-accent-400)' : 'rgba(255,255,255,0.75)',
+      toggleCharList: this.toggleCharList,
+      charListDisplay: this.state.charListOpen ? 'flex' : 'none',
+      charIconColor: this.state.charListOpen ? 'var(--color-accent-400)' : 'rgba(255,255,255,0.75)',
+      personaList,
+      delay: this.state.delay, delayLabel: `${this.state.delay.toFixed(1)}s`,
+      references: this.state.references,
+      onDelayChange: this.onDelayChange, onReferencesChange: this.onReferencesChange,
+      callTime: this.formatTime(this.state.seconds),
+      toggleTakeover: this.toggleTakeover,
+      takeoverLabel: this.state.guardianActive ? 'Hand Back' : 'Take Over Call',
+      takeoverBg: this.state.guardianActive ? 'var(--color-accent-2-600)' : 'var(--color-accent)',
+      dancerSrc: this.state.guardianActive ? 'assets/dancing-character.gif' : 'assets/dancing-character-still.png',
+      dancerAnim: this.state.guardianActive ? 'wiggle 2.6s ease-in-out infinite' : 'none',
+      toggleNuclear: this.toggleNuclear,
+      nuclearIconColor: nuclear ? '#ff3b30' : 'rgba(255,255,255,0.75)',
+      nuclearLabelDisplay: nuclear ? 'block' : 'none',
+    };
+  }
+}
+
+</script>
+</body>
+</html>
