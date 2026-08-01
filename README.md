@@ -1,6 +1,6 @@
 # HackthonCyberSec
 
-Hackathon entry, presented as **I AM NIGERIAN PRINCE**. A scambaiting rig that
+Hackathon entry, presented as **I AM  PRINCE**. A scambaiting rig that
 answers fraud calls in a clone of your voice, then gradually turns into somebody
 else.
 
